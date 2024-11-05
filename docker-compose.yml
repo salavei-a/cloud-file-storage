@@ -1,0 +1,9 @@
+services:
+  db:
+    container_name: cloud-file-storage
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    restart: always
+    ports:
+      - "4777:5432"
