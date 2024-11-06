@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: common_head('Sign In')}"></head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="text-center">Sign In</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <form th:action="@{/auth/signin}" th:object="${user}" th:method="post" class="mt-4">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" th:field="*{username}" class="form-control" id="username" name="username" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" th:field="*{password}" class="form-control" id="password" name="password" required/>
+                </div>
+
+                <input type="hidden" name="redirect_to" th:value="${param.redirect_to}"/>
+
+                <div th:replace="~{fragments/errorMessages :: errorMessages}"></div>
+
+                <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                <p class="mt-3 text-center">Don't have an account? <a th:href="@{/auth/signup}">Sign up here</a></p>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
