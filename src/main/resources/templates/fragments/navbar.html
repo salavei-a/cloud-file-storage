@@ -1,8 +1,9 @@
-<nav th:fragment="navbar" class="navbar navbar-light bg-light">
+<nav th:fragment="navbar" class="navbar navbar-light bg-light" xmlns:sec="http://www.w3.org/1999/xhtml">
     <div class="container-fluid">
         <a class="navbar-brand" th:href="@{/}">Cloud File Storage</a>
         <div class="d-flex align-items-center">
-<!--            <span class="navbar-text me-2" th:text="${user.username}"></span>-->
+            <div sec:authorize="isAuthenticated()">
+                <span class="navbar-text me-2" sec:authentication="name"></span></div>
             <form th:action="@{/auth/signout}" method="post" class="d-inline mb-0">
                 <button class="btn btn-outline-danger" type="submit">Sign out</button>
             </form>
