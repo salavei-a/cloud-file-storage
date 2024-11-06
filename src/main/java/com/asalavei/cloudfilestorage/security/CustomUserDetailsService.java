@@ -1,7 +1,7 @@
 package com.asalavei.cloudfilestorage.security;
 
 import com.asalavei.cloudfilestorage.entity.User;
-import com.asalavei.cloudfilestorage.repository.UserRepository;
+import com.asalavei.cloudfilestorage.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,16 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+        User user = userService.getUser(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found with username: " + username));
 
-        return UserPrincipal.builder()
-                .user(user)
-                .build();
+        return new UserPrincipal(user);
     }
 }
