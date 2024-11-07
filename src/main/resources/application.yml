@@ -13,7 +13,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 logging:
   level:
     org.springframework.security: DEBUG
+
+minio:
+  access:
+    name: minioadmin
+    secret: minioadmin
+  bucket:
+    name: user-files
+  url: http://localhost:9000
