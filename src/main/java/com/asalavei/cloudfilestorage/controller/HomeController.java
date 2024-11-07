@@ -25,7 +25,7 @@ public class HomeController {
         return HOME_VIEW;
     }
 
-    @PostMapping("/create-folder")
+    @PostMapping("/new-folder")
     public String createFolder(@RequestParam("folderName") String folderName, @AuthenticationPrincipal UserPrincipal userPrincipal) {
         storageService.createFolder(userPrincipal.getId(), folderName);
         return REDIRECT_HOME;
