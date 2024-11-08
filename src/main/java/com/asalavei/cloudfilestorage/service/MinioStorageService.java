@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MinioStorageService implements StorageService {
 
-    private static final String PREFIX = "user-%s-files/";
+    private static final String PREFIX = "user-%s-files";
     private static final String OBJECT_NAME = PREFIX + "%s";
 
     @Value("${minio.bucket.name}")
@@ -29,7 +29,7 @@ public class MinioStorageService implements StorageService {
     private final MinioClient minioClient;
 
     public void addFile(Long userId, MultipartFile file) {
-        String objectName = String.format(OBJECT_NAME, userId, file.getOriginalFilename());
+        String objectName = String.format(OBJECT_NAME, userId, "/" + file.getOriginalFilename());
 
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
@@ -46,7 +46,7 @@ public class MinioStorageService implements StorageService {
     }
 
     public void createFolder(Long userId, String folderName) {
-        String objectName = String.format(OBJECT_NAME, userId, folderName + "/");
+        String objectName = String.format(OBJECT_NAME, userId, "/" + folderName + "/");
 
         try {
             minioClient.putObject(
@@ -78,9 +78,8 @@ public class MinioStorageService implements StorageService {
 
             for (Result<Item> result : results) {
                 Item item = result.get();
-                String[] parts = item.objectName().split("/");
                 items.add(ItemDto.builder()
-                        .name(parts[parts.length - 1])
+                        .name(item.objectName().replace(folderPath, ""))
                         .path(item.objectName().replace(prefix, ""))
                         .build());
             }

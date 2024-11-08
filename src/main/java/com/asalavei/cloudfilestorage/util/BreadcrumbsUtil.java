@@ -14,7 +14,7 @@ public class BreadcrumbsUtil {
         breadcrumbs.add(new Breadcrumb("Home", "/"));
 
         String[] parts = path.split("/");
-        StringBuilder currentPath = new StringBuilder();
+        StringBuilder currentPath = new StringBuilder("/");
 
         for (String part : parts) {
             if (!part.isBlank()) {

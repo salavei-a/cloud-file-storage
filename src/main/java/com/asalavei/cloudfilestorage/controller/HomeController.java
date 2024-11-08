@@ -21,7 +21,7 @@ public class HomeController {
     private final StorageService storageService;
 
     @GetMapping
-    public String homePage(@RequestParam(value = "path", required = false, defaultValue = "") String path, Model model,
+    public String homePage(@RequestParam(value = "path", required = false, defaultValue = "/") String path, Model model,
                            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         model.addAttribute("breadcrumbs", BreadcrumbsUtil.buildBreadcrumbs(path));
         model.addAttribute("items", storageService.listItems(userPrincipal.getId(), path));

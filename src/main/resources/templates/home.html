@@ -5,6 +5,11 @@
 
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
+<form class="d-flex my-4" th:action="@{/search}" method="get">
+    <input class="form-control me-2" type="text" name="name" placeholder="Search in Storage" required>
+    <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+
 <h2>File upload</h2>
 <form th:action="@{/disk}" method="post" enctype="multipart/form-data">
     <div>
@@ -61,10 +66,9 @@
     <div th:each="item : ${items}">
         <span th:if="${!#strings.endsWith(item.getPath(), '/')}" th:text="${item.getName()}"></span>
         <span th:if="${#strings.endsWith(item.getPath(), '/')}">
-            <a th:href="@{'/?path=' + ${item.getPath()}}" th:text="${item.getName()}"></a>
+            <a th:if="${!item.getName().isBlank()}" th:href="@{'/?path=' + ${item.getPath()}}" th:text="${item.getName().substring(0, item.getName().length() - 1)}"></a>
         </span>
     </div>
-
 </div>
 
 </body>

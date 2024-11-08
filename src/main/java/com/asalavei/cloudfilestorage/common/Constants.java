@@ -19,4 +19,5 @@ public class Constants {
     public static final String SIGNIN_VIEW = "auth/signin";
     public static final String SIGNUP_VIEW = "auth/signup";
     public static final String HOME_VIEW = "home";
+    public static final String SEARCH_VIEW = "search";
 }
