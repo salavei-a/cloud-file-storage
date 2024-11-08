@@ -46,5 +46,26 @@
     }
 </script>
 
+<br>
+
+<h2>Files:</h2>
+<div>
+    <span th:each="breadcrumb, iterStat : ${breadcrumbs}">
+        <span th:if="${!iterStat.first}"> / </span>
+        <a th:if="${iterStat.first}" th:href="@{/}" th:text="${breadcrumb.name()}"></a>
+        <a th:if="${!iterStat.first}" th:href="@{'/?path=' + ${breadcrumb.path()}}" th:text="${breadcrumb.name()}"></a>
+    </span>
+</div>
+
+<div th:if="${items != null and !#lists.isEmpty(items)}">
+    <div th:each="item : ${items}">
+        <span th:if="${!#strings.endsWith(item.getPath(), '/')}" th:text="${item.getName()}"></span>
+        <span th:if="${#strings.endsWith(item.getPath(), '/')}">
+            <a th:href="@{'/?path=' + ${item.getPath()}}" th:text="${item.getName()}"></a>
+        </span>
+    </div>
+
+</div>
+
 </body>
 </html>
