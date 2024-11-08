@@ -5,7 +5,7 @@
 
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-<form class="d-flex my-4" th:action="@{/search}" method="get">
+<form class="d-flex my-4" th:action="@{/disk/search}" method="get">
     <input class="form-control me-2" type="text" name="name" placeholder="Search in Storage" required>
     <button class="btn btn-outline-success" type="submit">Search</button>
 </form>
