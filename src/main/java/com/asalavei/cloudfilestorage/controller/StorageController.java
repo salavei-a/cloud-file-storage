@@ -24,7 +24,7 @@ public class StorageController {
 
     @PostMapping
     public String upload(@RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        files.forEach(file -> storageService.uploadFile(userPrincipal.getId(), file));
+        files.forEach(file -> storageService.addFile(userPrincipal.getId(), file));
         return REDIRECT_HOME;
     }
 

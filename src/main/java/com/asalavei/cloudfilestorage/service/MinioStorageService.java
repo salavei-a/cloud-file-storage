@@ -28,7 +28,7 @@ public class MinioStorageService implements StorageService {
 
     private final MinioClient minioClient;
 
-    public void uploadFile(Long userId, MultipartFile file) {
+    public void addFile(Long userId, MultipartFile file) {
         String objectName = String.format(OBJECT_NAME, userId, file.getOriginalFilename());
 
         try (InputStream inputStream = file.getInputStream()) {
