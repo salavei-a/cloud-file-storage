@@ -21,7 +21,7 @@ import static com.asalavei.cloudfilestorage.common.Constants.SEARCH_VIEW;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/disk")
+@RequestMapping("/storage")
 public class StorageController {
 
     private final StorageService storageService;

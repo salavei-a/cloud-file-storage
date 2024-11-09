@@ -5,13 +5,13 @@
 
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-<form class="d-flex my-4" th:action="@{/disk/search}" method="get">
+<form class="d-flex my-4" th:action="@{/storage/search}" method="get">
     <input class="form-control me-2" type="text" name="name" placeholder="Search in Storage" required>
     <button class="btn btn-outline-success" type="submit">Search</button>
 </form>
 
 <h2>File upload</h2>
-<form th:action="@{/disk}" method="post" enctype="multipart/form-data">
+<form th:action="@{/storage}" method="post" enctype="multipart/form-data">
     <div>
         <input type="file" id="file" name="files" multiple required />
         <button type="submit">Upload File</button>
@@ -21,7 +21,7 @@
 <br>
 
 <h2>Folder upload</h2>
-<form th:action="@{/disk}" method="post" enctype="multipart/form-data">
+<form th:action="@{/storage}" method="post" enctype="multipart/form-data">
     <div>
         <input type="file" id="folder" name="files" webkitdirectory multiple required />
         <button type="submit">Upload Folder</button>
@@ -43,7 +43,7 @@
         const folderName = document.getElementById('folderName').value;
         if (folderName) {
             const form = document.getElementById('newFolderForm');
-            form.action = `/disk/${encodeURIComponent(folderName)}`;
+            form.action = `/storage/${encodeURIComponent(folderName)}`;
             form.submit();
         } else {
             alert("Please enter a folder name.");
