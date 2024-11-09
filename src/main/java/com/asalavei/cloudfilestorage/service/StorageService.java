@@ -9,7 +9,7 @@ import java.util.List;
 public interface StorageService {
     void addFile(Long userId, MultipartFile file);
 
-    InputStream getFile(Long userId, String filename);
+    InputStream getFile(Long userId, String filePath);
 
     void createFolder(Long userId, String folderName); // TODO: change folderName to folder to folderPath? to path?
 

@@ -48,8 +48,8 @@ public class MinioStorageService implements StorageService {
     }
 
     @Override
-    public InputStream getFile(Long userId, String filename) {
-        String objectName = String.format(OBJECT_NAME, userId, "/" + filename);
+    public InputStream getFile(Long userId, String filePath) {
+        String objectName = String.format(OBJECT_NAME, userId, filePath);
 
         try {
             return minioClient.getObject(
@@ -59,7 +59,7 @@ public class MinioStorageService implements StorageService {
                             .build()
             );
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download file: " + filename, e);
+            throw new RuntimeException("Failed to download file: " + filePath, e);
         }
     }
 
