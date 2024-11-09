@@ -64,9 +64,15 @@
 
 <div th:if="${items != null and !#lists.isEmpty(items)}">
     <div th:each="item : ${items}">
-        <span th:if="${!#strings.endsWith(item.getPath(), '/')}" th:text="${item.getName()}"></span>
+        <span th:if="${!#strings.endsWith(item.getPath(), '/')}">
+            <span th:text="${item.getName()}"></span>
+            <a th:href="@{'/storage/download' + ${item.getPath()}}" class="btn btn-link">Download</a>
+        </span>
+
         <span th:if="${#strings.endsWith(item.getPath(), '/')}">
-            <a th:if="${!item.getName().isBlank()}" th:href="@{'/?path=' + ${item.getPath()}}" th:text="${item.getName().substring(0, item.getName().length() - 1)}"></a>
+            <a th:if="${!item.getName().isBlank()}"
+               th:href="@{'/?path=' + ${item.getPath()}}"
+               th:text="${item.getName().substring(0, item.getName().length() - 1)}"></a>
         </span>
     </div>
 </div>
