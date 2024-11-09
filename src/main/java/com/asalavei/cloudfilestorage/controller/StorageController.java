@@ -3,9 +3,11 @@ package com.asalavei.cloudfilestorage.controller;
 import com.asalavei.cloudfilestorage.dto.ItemDto;
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
 import com.asalavei.cloudfilestorage.service.StorageService;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,17 +32,19 @@ public class StorageController {
     private final StorageService storageService;
 
     @GetMapping("/download/{*filePath}")
-    public void downloadFile(@PathVariable("filePath") String filePath, @AuthenticationPrincipal UserPrincipal userPrincipal, HttpServletResponse response) {
+    public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("filePath") String filePath,
+                                                            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            String[] parts = filePath.split("/");
-            String filename = parts.length > 0 ? parts[parts.length - 1] : "";
+            InputStream inputStream = storageService.getFile(userPrincipal.getId(), filePath);
+            String filename = filePath.substring(filePath.lastIndexOf('/') + 1);
 
-            InputStream fileInputStream = storageService.getFile(userPrincipal.getId(), filePath);
-            response.setHeader("Content-Disposition", "attachment;filename=" + filename);
-            response.setCharacterEncoding("UTF-8");
-            IOUtils.copy(fileInputStream, response.getOutputStream());
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new InputStreamResource(inputStream));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download file: " + filePath, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
         }
     }
 
