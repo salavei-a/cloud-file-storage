@@ -1,6 +1,7 @@
 package com.asalavei.cloudfilestorage.service;
 
 import com.asalavei.cloudfilestorage.dto.ItemDto;
+import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -28,6 +29,7 @@ public class MinioStorageService implements StorageService {
 
     private final MinioClient minioClient;
 
+    @Override
     public void addFile(Long userId, MultipartFile file) {
         String objectName = String.format(OBJECT_NAME, userId, "/" + file.getOriginalFilename());
 
@@ -45,6 +47,23 @@ public class MinioStorageService implements StorageService {
         }
     }
 
+    @Override
+    public InputStream getFile(Long userId, String filename) {
+        String objectName = String.format(OBJECT_NAME, userId, "/" + filename);
+
+        try {
+            return minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download file: " + filename, e);
+        }
+    }
+
+    @Override
     public void createFolder(Long userId, String folderName) {
         String objectName = String.format(OBJECT_NAME, userId, "/" + folderName + "/");
 
@@ -62,6 +81,7 @@ public class MinioStorageService implements StorageService {
         }
     }
 
+    @Override
     public List<ItemDto> listItems(Long userId, String folderName) {
         String prefix = String.format(PREFIX, userId);
         String folderPath = String.format(OBJECT_NAME, userId, folderName);
