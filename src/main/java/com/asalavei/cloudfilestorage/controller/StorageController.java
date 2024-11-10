@@ -1,6 +1,5 @@
 package com.asalavei.cloudfilestorage.controller;
 
-import com.asalavei.cloudfilestorage.dto.ItemDto;
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
 import com.asalavei.cloudfilestorage.service.StorageService;
 import lombok.RequiredArgsConstructor;
@@ -49,17 +48,8 @@ public class StorageController {
     }
 
     @GetMapping("/search")
-    public String searchItems(Model model) {
-        List<ItemDto> items = List.of(
-                new ItemDto("3dd.png", "/3dd.png"),
-                new ItemDto("New Text Document.txt", "/New Text Document.txt"),
-                new ItemDto("Screenshot 2024-11-07 213438.png", "/test/Screenshot 2024-11-07 213438.png"),
-                new ItemDto("ff/", "/test/ff/"),
-                new ItemDto("1 (3).png", "/test/ff/efe/1 (3).png")
-        );
-
-        model.addAttribute("items", items);
-
+    public String searchItems(@RequestParam("query") String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
+        model.addAttribute("items", storageService.searchItems(userPrincipal.getId(), query));
         return SEARCH_VIEW;
     }
 
