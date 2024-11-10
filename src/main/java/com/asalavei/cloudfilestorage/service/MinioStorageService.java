@@ -15,7 +15,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -108,5 +111,49 @@ public class MinioStorageService implements StorageService {
         }
 
         return items;
+    }
+
+    @Override
+    public List<ItemDto> searchItems(Long userId, String query) {
+        try {
+            String prefix = String.format(PREFIX, userId);
+            List<ItemDto> items = new ArrayList<>();
+            Map<String, String> folders = new HashMap<>();
+
+            Iterable<Result<Item>> results = minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(prefix)
+                            .recursive(true)
+                            .build()
+            );
+
+            for (Result<Item> result : results) {
+                Item item = result.get();
+                String path = item.objectName().replace(prefix, "");
+                String[] parts = item.objectName().split("/");
+                String objectName = parts[parts.length - 1];
+
+                Arrays.stream(parts)
+                        .filter(part -> part.toLowerCase().contains(query.toLowerCase()))
+                        .filter(part -> path.contains((part + "/")))
+                        .forEach(part -> folders.put(path.substring(0, path.indexOf(part) + part.length() + 1), part + "/"));
+
+                if (objectName.toLowerCase().contains(query.toLowerCase())) {
+                    items.add(ItemDto.builder()
+                            .name(objectName)
+                            .path(path)
+                            .build());
+                }
+            }
+
+            folders.entrySet().stream()
+                    .map(entry -> new ItemDto(entry.getValue(), entry.getKey()))
+                    .forEach(items::add);
+
+            return items;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to search in storage", e);
+        }
     }
 }

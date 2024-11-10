@@ -14,4 +14,6 @@ public interface StorageService {
     void createFolder(Long userId, String folderName); // TODO: change folderName to folder to folderPath? to path?
 
     List<ItemDto> listItems(Long userId, String folderPath);
+
+    List<ItemDto> searchItems(Long userId, String query);
 }
