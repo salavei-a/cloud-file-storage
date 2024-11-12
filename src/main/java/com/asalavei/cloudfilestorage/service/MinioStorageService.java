@@ -101,10 +101,14 @@ public class MinioStorageService implements StorageService {
 
             for (Result<Item> result : results) {
                 Item item = result.get();
-                items.add(ItemDto.builder()
-                        .name(item.objectName().replace(folderPath, ""))
-                        .path(item.objectName().replace(prefix, ""))
-                        .build());
+                String name = item.objectName().replace(folderPath, "");
+
+                if (!name.isBlank()) {
+                    items.add(ItemDto.builder()
+                            .name(name)
+                            .path(item.objectName().replace(prefix, ""))
+                            .build());
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to view files in folder: " + folderPath, e);
@@ -129,7 +133,11 @@ public class MinioStorageService implements StorageService {
 
             for (Result<Item> result : results) {
                 Item item = result.get();
-                String path = item.objectName().replace(prefix, "");
+                String originalPath = item.objectName().replace(prefix, "");
+                String path = originalPath.endsWith("/")
+                        ? originalPath
+                        : originalPath.substring(0, originalPath.lastIndexOf("/") + 1);
+
                 String[] parts = item.objectName().split("/");
                 String objectName = parts[parts.length - 1];
 

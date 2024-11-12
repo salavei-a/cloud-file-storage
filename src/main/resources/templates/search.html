@@ -14,10 +14,10 @@
     <h2>Search results</h2>
     <div th:if="${items != null and !#lists.isEmpty(items)}">
         <div th:each="item : ${items}">
-            <span th:if="${!#strings.endsWith(item.getPath(), '/')}">
+            <span th:if="${!#strings.endsWith(item.getName(), '/')}">
                 <a th:href="@{'/?path=' + ${item.getPath()}}" th:text="${item.getName()}"></a>
             </span>
-            <span th:if="${#strings.endsWith(item.getPath(), '/')}">
+            <span th:if="${#strings.endsWith(item.getName(), '/')}">
                 <a th:if="${!item.getName().isBlank()}" th:href="@{'/?path=' + ${item.getPath()}}" th:text="${item.getName().substring(0, item.getName().length() - 1)}"></a>
             </span>
         </div>

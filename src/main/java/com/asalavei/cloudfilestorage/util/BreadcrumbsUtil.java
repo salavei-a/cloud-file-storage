@@ -13,6 +13,10 @@ public class BreadcrumbsUtil {
         List<Breadcrumb> breadcrumbs = new ArrayList<>();
         breadcrumbs.add(new Breadcrumb("Home", "/"));
 
+        if (!path.endsWith("/")) {
+            path = path.substring(0, path.lastIndexOf("/") + 1);
+        }
+
         String[] parts = path.split("/");
         StringBuilder currentPath = new StringBuilder("/");
 
