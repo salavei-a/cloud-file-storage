@@ -117,8 +117,7 @@ public class MinioStorageService implements StorageService {
     public List<ItemDto> searchItems(Long userId, String query) {
         try {
             String prefix = String.format(PREFIX, userId);
-            List<ItemDto> items = new ArrayList<>();
-            Map<String, String> folders = new HashMap<>();
+            Map<String, String> items = new HashMap<>();
 
             Iterable<Result<Item>> results = minioClient.listObjects(
                     ListObjectsArgs.builder()
@@ -134,24 +133,19 @@ public class MinioStorageService implements StorageService {
                 String[] parts = item.objectName().split("/");
                 String objectName = parts[parts.length - 1];
 
+                if (objectName.toLowerCase().contains(query.toLowerCase())) {
+                    items.put(path, objectName);
+                }
+
                 Arrays.stream(parts)
                         .filter(part -> part.toLowerCase().contains(query.toLowerCase()))
                         .filter(part -> path.contains((part + "/")))
-                        .forEach(part -> folders.put(path.substring(0, path.indexOf(part) + part.length() + 1), part + "/"));
-
-                if (objectName.toLowerCase().contains(query.toLowerCase())) {
-                    items.add(ItemDto.builder()
-                            .name(objectName)
-                            .path(path)
-                            .build());
-                }
+                        .forEach(part -> items.put(path.substring(0, path.indexOf(part) + part.length() + 1), part + "/"));
             }
 
-            folders.entrySet().stream()
+            return items.entrySet().stream()
                     .map(entry -> new ItemDto(entry.getValue(), entry.getKey()))
-                    .forEach(items::add);
-
-            return items;
+                    .toList();
         } catch (Exception e) {
             throw new RuntimeException("Failed to search in storage", e);
         }
