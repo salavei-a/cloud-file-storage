@@ -33,8 +33,8 @@ public class MinioStorageService implements StorageService {
     private final MinioClient minioClient;
 
     @Override
-    public void addFile(Long userId, MultipartFile file) {
-        String objectName = String.format(OBJECT_NAME, userId, "/" + file.getOriginalFilename());
+    public void addFile(Long userId, MultipartFile file, String path) {
+        String objectName = String.format(OBJECT_NAME, userId, path + file.getOriginalFilename());
 
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
@@ -67,8 +67,8 @@ public class MinioStorageService implements StorageService {
     }
 
     @Override
-    public void createFolder(Long userId, String folderName) {
-        String objectName = String.format(OBJECT_NAME, userId, "/" + folderName + "/");
+    public void createFolder(Long userId, String folderName, String path) {
+        String objectName = String.format(OBJECT_NAME, userId, path + folderName + "/");
 
         try {
             minioClient.putObject(

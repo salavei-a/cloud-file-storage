@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.util.List;
 
-import static com.asalavei.cloudfilestorage.common.Constants.REDIRECT_HOME;
 import static com.asalavei.cloudfilestorage.common.Constants.SEARCH_VIEW;
 
 @Controller
@@ -54,14 +53,16 @@ public class StorageController {
     }
 
     @PostMapping
-    public String upload(@RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        files.forEach(file -> storageService.addFile(userPrincipal.getId(), file));
-        return REDIRECT_HOME;
+    public String upload(@RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal,
+                         @RequestParam(value = "path", defaultValue = "/") String path) {
+        files.forEach(file -> storageService.addFile(userPrincipal.getId(), file, path));
+        return "redirect:/?path=" + path;
     }
 
     @PostMapping("/{folderName}")
-    public String createFolder(@PathVariable("folderName") String folderName, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        storageService.createFolder(userPrincipal.getId(), folderName);
-        return REDIRECT_HOME;
+    public String createFolder(@PathVariable("folderName") String folderName, @AuthenticationPrincipal UserPrincipal userPrincipal,
+                               @RequestParam(value = "path", defaultValue = "/") String path) {
+        storageService.createFolder(userPrincipal.getId(), folderName, path);
+        return "redirect:/?path=" + path;
     }
 }

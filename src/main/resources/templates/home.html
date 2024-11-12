@@ -12,6 +12,7 @@
 
 <h2>File upload</h2>
 <form th:action="@{/storage}" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="path" th:value="${param.path}" />
     <div>
         <input type="file" id="file" name="files" multiple required />
         <button type="submit">Upload File</button>
@@ -22,6 +23,7 @@
 
 <h2>Folder upload</h2>
 <form th:action="@{/storage}" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="path" th:value="${param.path}" />
     <div>
         <input type="file" id="folder" name="files" webkitdirectory multiple required />
         <button type="submit">Upload Folder</button>
@@ -32,6 +34,7 @@
 
 <h2>New folder</h2>
 <form id="newFolderForm" method="post">
+    <input type="hidden" name="path" th:value="${param.path}" />
     <div>
         <input type="text" id="folderName" name="folderName" placeholder="Folder name" required />
         <button type="button" onclick="submitForm()">Create Folder</button>

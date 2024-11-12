@@ -7,11 +7,11 @@ import java.io.InputStream;
 import java.util.List;
 
 public interface StorageService {
-    void addFile(Long userId, MultipartFile file);
+    void addFile(Long userId, MultipartFile file, String path);
 
     InputStream getFile(Long userId, String filePath);
 
-    void createFolder(Long userId, String folderName); // TODO: change folderName to folder to folderPath? to path?
+    void createFolder(Long userId, String folderName, String path);
 
     List<ItemDto> listItems(Long userId, String folderPath);
 
