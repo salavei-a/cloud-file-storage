@@ -11,6 +11,8 @@ public interface StorageService {
 
     InputStream getFile(Long userId, String filePath);
 
+    InputStream getFolder(Long userId, String path);
+
     void createFolder(Long userId, String folderName, String path);
 
     List<ItemDto> listItems(Long userId, String folderPath);
