@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static com.asalavei.cloudfilestorage.common.Constants.SEARCH_VIEW;
@@ -46,6 +49,21 @@ public class StorageController {
         }
     }
 
+    @GetMapping("/download-multiple/{*path}")
+    public ResponseEntity<InputStreamResource> downloadFolder(@PathVariable("path") String path,
+                                                              @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        try {
+            InputStream inputStream = storageService.getFolder(userPrincipal.getId(), path);
+
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"" + generateZipFilename(path) + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new InputStreamResource(inputStream));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/search")
     public String searchItems(@RequestParam("query") String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
         model.addAttribute("items", storageService.searchItems(userPrincipal.getId(), query));
@@ -64,5 +82,12 @@ public class StorageController {
                                @RequestParam(value = "path", defaultValue = "/") String path) {
         storageService.createFolder(userPrincipal.getId(), folderName, path);
         return "redirect:/?path=" + path;
+    }
+
+    private static String generateZipFilename(String path) {
+        String trimmedPath = path.substring(0, path.length() - 1);
+        String folderName = trimmedPath.substring(trimmedPath.lastIndexOf("/") + 1);
+        String timestamp = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
+        return folderName + "-" + timestamp + ".zip";
     }
 }
