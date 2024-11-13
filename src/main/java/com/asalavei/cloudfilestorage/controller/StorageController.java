@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -87,6 +88,13 @@ public class StorageController {
                                @RequestParam(value = "path", defaultValue = "/") String path) {
         storageService.createFolder(userPrincipal.getId(), folderName, path);
         return "redirect:/?path=" + path;
+    }
+
+    @PatchMapping
+    public String rename(@RequestParam("newName") String newName, @RequestParam("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
+                         @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
+        storageService.rename(userPrincipal.getId(), newName, path);
+        return "redirect:" + referer;
     }
 
     @DeleteMapping("/{*path}")
