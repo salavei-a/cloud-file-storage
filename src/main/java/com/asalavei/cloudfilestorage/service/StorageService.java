@@ -18,4 +18,9 @@ public interface StorageService {
     List<ItemDto> listItems(Long userId, String folderPath);
 
     List<ItemDto> searchItems(Long userId, String query);
+
+    void delete(Long userId, String path);
 }
+
+// TODO: change folderName to folder to folderPath? to path?
+// TODO: list(), search(), add() ?

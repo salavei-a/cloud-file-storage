@@ -5,9 +5,14 @@ import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
+import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +28,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MinioStorageService implements StorageService {
@@ -201,6 +207,69 @@ public class MinioStorageService implements StorageService {
                     .toList();
         } catch (Exception e) {
             throw new RuntimeException("Failed to search in storage", e);
+        }
+    }
+
+    @Override
+    public void delete(Long userId, String path) {
+        if (!path.endsWith("/")) {
+            deleteFile(userId, path);
+        } else {
+            deleteFolder(userId, path);
+        }
+    }
+
+    private void deleteFile(Long userId, String filePath) {
+        String objectName = String.format(OBJECT_NAME, userId, filePath);
+
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete file: " + filePath, e);
+        }
+    }
+
+    private void deleteFolder(Long userId, String folderPath) {
+        String prefix = String.format(OBJECT_NAME, userId, folderPath);
+
+        try {
+            Iterable<Result<Item>> results = minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(prefix)
+                            .recursive(true)
+                            .build()
+            );
+
+            List<DeleteObject> objectsToDelete = new ArrayList<>();
+
+            for (Result<Item> result : results) {
+                objectsToDelete.add(new DeleteObject(result.get().objectName()));
+            }
+
+            if (objectsToDelete.isEmpty()) {
+                log.warn("No objects found with prefix: " + prefix);
+                throw new RuntimeException("No object found to delete");
+            }
+
+            Iterable<Result<DeleteError>> errors = minioClient.removeObjects(
+                    RemoveObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .objects(objectsToDelete)
+                            .build()
+            );
+
+            for (Result<DeleteError> error : errors) {
+                DeleteError deleteError = error.get();
+                log.warn("Failed to delete: " + deleteError.objectName() + " - " + deleteError.message());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete folder: " + folderPath, e);
         }
     }
 }
