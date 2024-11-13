@@ -78,6 +78,11 @@
                th:text="${item.getName().substring(0, item.getName().length() - 1)}"></a>
             <a th:href="@{'/storage/download-multiple' + ${item.getPath()}}" class="btn btn-link">Download</a>
         </span>
+
+        <form th:action="@{'/storage' + ${item.getPath()}}" method="post" class="d-inline">
+            <input type="hidden" name="_method" value="delete"/>
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
     </div>
 </div>
 
