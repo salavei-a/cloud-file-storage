@@ -69,14 +69,14 @@
     <div th:each="item : ${items}">
         <span th:if="${!#strings.endsWith(item.getName(), '/')}">
             <span th:text="${item.getName()}"></span>
-            <a th:href="@{'/storage/download' + ${item.getPath()}}" class="btn btn-link">Download</a>
+            <a th:href="@{/storage/download{path}(path=${item.getPath()})}" class="btn btn-link">Download</a>
         </span>
 
         <span th:if="${#strings.endsWith(item.getName(), '/')}">
             <a th:if="${!item.getName().isBlank()}"
                th:href="@{'/?path=' + ${item.getPath()}}"
                th:text="${item.getName().substring(0, item.getName().length() - 1)}"></a>
-            <a th:href="@{'/storage/download-multiple' + ${item.getPath()}}" class="btn btn-link">Download</a>
+            <a th:href="@{/storage/download-multiple{path}(path=${item.getPath()})}" class="btn btn-link">Download</a>
         </span>
 
         <form th:action="@{'/storage' + ${item.getPath()}}" method="post" class="d-inline">
