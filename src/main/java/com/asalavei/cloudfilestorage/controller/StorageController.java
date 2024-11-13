@@ -18,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -40,9 +42,10 @@ public class StorageController {
         try {
             InputStream inputStream = storageService.getFile(userPrincipal.getId(), filePath);
             String filename = filePath.substring(filePath.lastIndexOf('/') + 1);
+            String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(filename, StandardCharsets.UTF_8);
 
             return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                    .header("Content-Disposition", contentDisposition)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(new InputStreamResource(inputStream));
         } catch (Exception e) {
