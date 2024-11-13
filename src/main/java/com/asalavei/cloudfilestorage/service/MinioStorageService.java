@@ -1,6 +1,8 @@
 package com.asalavei.cloudfilestorage.service;
 
 import com.asalavei.cloudfilestorage.dto.ItemDto;
+import io.minio.CopyObjectArgs;
+import io.minio.CopySource;
 import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
@@ -211,6 +213,84 @@ public class MinioStorageService implements StorageService {
     }
 
     @Override
+    public void rename(Long userId, String newName, String path) {
+        boolean isFolder = path.endsWith("/");
+        String trimmedPath = isFolder ? path.substring(0, path.length() - 1) : path;
+        String parentPath = trimmedPath.substring(0, trimmedPath.lastIndexOf('/') + 1);
+        String newPath = parentPath + newName;
+        newPath = isFolder ? newPath + "/" : newPath;
+
+        if (isFolder) {
+            renameFolder(userId, newPath, path);
+        } else {
+            renameFile(userId, newPath, path);
+        }
+    }
+
+    private void renameFile(Long userId, String newPath, String oldPath) {
+        String oldObjectName = String.format(OBJECT_NAME, userId, oldPath);
+        String newObjectName = String.format(OBJECT_NAME, userId, newPath);
+
+        try {
+            CopySource source = CopySource.builder()
+                    .bucket(bucketName)
+                    .object(oldObjectName)
+                    .build();
+
+            minioClient.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(newObjectName)
+                            .source(source)
+                            .build()
+            );
+
+            deleteFile(userId, oldPath);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to rename file: " + oldPath, e);
+        }
+    }
+
+    private void renameFolder(Long userId, String newPath, String oldPath) {
+        String oldPrefix = String.format(OBJECT_NAME, userId, oldPath);
+        String newPrefix = String.format(OBJECT_NAME, userId, newPath);
+
+        try {
+            Iterable<Result<Item>> results = minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(oldPrefix)
+                            .recursive(true)
+                            .build()
+            );
+
+            for (Result<Item> result : results) {
+                Item item = result.get();
+                String oldObjectName = item.objectName();
+                String relativePath = oldObjectName.substring(oldPrefix.length());
+                String newObjectName = newPrefix + relativePath;
+
+                CopySource source = CopySource.builder()
+                        .bucket(bucketName)
+                        .object(oldObjectName)
+                        .build();
+
+                minioClient.copyObject(
+                        CopyObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(newObjectName)
+                                .source(source)
+                                .build()
+                );
+            }
+
+            deleteFolder(userId, oldPath);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to rename folder: " + oldPath, e);
+        }
+    }
+
+    @Override
     public void delete(Long userId, String path) {
         if (!path.endsWith("/")) {
             deleteFile(userId, path);
@@ -253,7 +333,7 @@ public class MinioStorageService implements StorageService {
             }
 
             if (objectsToDelete.isEmpty()) {
-                log.warn("No objects found with prefix: " + prefix);
+                log.error("No objects found with prefix: " + prefix);
                 throw new RuntimeException("No object found to delete");
             }
 
@@ -266,7 +346,7 @@ public class MinioStorageService implements StorageService {
 
             for (Result<DeleteError> error : errors) {
                 DeleteError deleteError = error.get();
-                log.warn("Failed to delete: " + deleteError.objectName() + " - " + deleteError.message());
+                log.error("Failed to delete: " + deleteError.objectName() + " - " + deleteError.message());
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete folder: " + folderPath, e);
