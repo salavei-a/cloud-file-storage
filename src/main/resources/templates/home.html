@@ -11,7 +11,7 @@
 </form>
 
 <h2>File upload</h2>
-<form th:action="@{/storage}" method="post" enctype="multipart/form-data">
+<form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data">
     <input type="hidden" name="path" th:value="${param.path}" />
     <div>
         <input type="file" id="file" name="files" multiple required />
@@ -22,7 +22,7 @@
 <br>
 
 <h2>Folder upload</h2>
-<form th:action="@{/storage}" method="post" enctype="multipart/form-data">
+<form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data">
     <input type="hidden" name="path" th:value="${param.path}" />
     <div>
         <input type="file" id="folder" name="files" webkitdirectory multiple required />

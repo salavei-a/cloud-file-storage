@@ -70,7 +70,7 @@ public class StorageController {
         return SEARCH_VIEW;
     }
 
-    @PostMapping
+    @PostMapping("/upload")
     public String upload(@RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          @RequestParam(value = "path", defaultValue = "/") String path) {
         files.forEach(file -> storageService.addFile(userPrincipal.getId(), file, path));
