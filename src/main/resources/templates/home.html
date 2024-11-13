@@ -79,6 +79,8 @@
             <a th:href="@{/storage/download-multiple{path}(path=${item.getPath()})}" class="btn btn-link">Download</a>
         </span>
 
+        <button type="button" class="btn btn-danger btn-sm" th:attr="onclick=|openRenameModal('${item.getPath()}')|">Rename</button>
+
         <form th:action="@{'/storage' + ${item.getPath()}}" method="post" class="d-inline">
             <input type="hidden" name="_method" value="delete"/>
             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
@@ -87,4 +89,59 @@
 </div>
 
 </body>
+
+<div id="renameModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);">
+    <div style="background-color: #fff; padding: 20px; margin: 100px auto; width: 300px; border-radius: 10px;">
+        <h3>Rename</h3>
+        <input type="text" id="newNameInput" required style="width: 100%; margin-bottom: 10px;">
+        <button type="button" onclick="submitRenameForm()">OK</button>
+        <button type="button" onclick="closeRenameModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    let currentPath = '';
+
+    function openRenameModal(path) {
+        currentPath = path;
+        document.getElementById('renameModal').style.display = 'block';
+    }
+
+    function closeRenameModal() {
+        document.getElementById('renameModal').style.display = 'none';
+        currentPath = '';
+    }
+
+    function submitRenameForm() {
+        const newName = document.getElementById('newNameInput').value;
+        if (newName) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = `/storage`;
+
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'patch';
+            form.appendChild(methodInput);
+
+            const pathInput = document.createElement('input');
+            pathInput.type = 'hidden';
+            pathInput.name = 'path';
+            pathInput.value = `${currentPath}`;
+            form.appendChild(pathInput)
+
+            const newNameInput = document.createElement('input');
+            newNameInput.type = 'hidden';
+            newNameInput.name = 'newName';
+            newNameInput.value = newName;
+            form.appendChild(newNameInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            alert('Please enter a new name.');
+        }
+    }
+</script>
 </html>
