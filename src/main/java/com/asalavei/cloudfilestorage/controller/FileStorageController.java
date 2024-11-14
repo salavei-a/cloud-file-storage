@@ -1,7 +1,7 @@
 package com.asalavei.cloudfilestorage.controller;
 
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
-import com.asalavei.cloudfilestorage.service.StorageService;
+import com.asalavei.cloudfilestorage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
@@ -33,16 +33,16 @@ import static com.asalavei.cloudfilestorage.common.Constants.SEARCH_VIEW;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/storage")
-public class StorageController {
+public class FileStorageController {
 
-    private final StorageService storageService;
+    private final FileStorageService fileStorageService;
 
-    @GetMapping("/download/{*filePath}")
-    public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("filePath") String filePath,
+    @GetMapping("/download/{*path}")
+    public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("path") String path,
                                                             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            InputStream inputStream = storageService.getFile(userPrincipal.getId(), filePath);
-            String filename = filePath.substring(filePath.lastIndexOf('/') + 1);
+            InputStream inputStream = fileStorageService.downloadFile(userPrincipal.getId(), path);
+            String filename = path.substring(path.lastIndexOf('/') + 1);
             String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(filename, StandardCharsets.UTF_8);
 
             return ResponseEntity.ok()
@@ -59,7 +59,7 @@ public class StorageController {
     public ResponseEntity<InputStreamResource> downloadFolder(@PathVariable("path") String path,
                                                               @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            InputStream inputStream = storageService.getFolder(userPrincipal.getId(), path);
+            InputStream inputStream = fileStorageService.downloadFolder(userPrincipal.getId(), path);
 
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=\"" + generateZipFilename(path) + "\"")
@@ -71,36 +71,36 @@ public class StorageController {
     }
 
     @GetMapping("/search")
-    public String searchItems(@RequestParam("query") String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
-        model.addAttribute("items", storageService.searchItems(userPrincipal.getId(), query));
+    public String search(@RequestParam("query") String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
+        model.addAttribute("items", fileStorageService.searchItems(userPrincipal.getId(), query));
         return SEARCH_VIEW;
     }
 
     @PostMapping("/upload")
     public String upload(@RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          @RequestParam(value = "path", defaultValue = "/") String path) {
-        files.forEach(file -> storageService.addFile(userPrincipal.getId(), file, path));
+        files.forEach(file -> fileStorageService.uploadFile(userPrincipal.getId(), file, path));
         return "redirect:/?path=" + path;
     }
 
     @PostMapping("/{folderName}")
     public String createFolder(@PathVariable("folderName") String folderName, @AuthenticationPrincipal UserPrincipal userPrincipal,
                                @RequestParam(value = "path", defaultValue = "/") String path) {
-        storageService.createFolder(userPrincipal.getId(), folderName, path);
+        fileStorageService.createFolder(userPrincipal.getId(), folderName, path);
         return "redirect:/?path=" + path;
     }
 
     @PatchMapping
     public String rename(@RequestParam("newName") String newName, @RequestParam("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
-        storageService.rename(userPrincipal.getId(), newName, path);
+        fileStorageService.renameItem(userPrincipal.getId(), newName, path);
         return "redirect:" + referer;
     }
 
     @DeleteMapping("/{*path}")
     public String delete(@PathVariable("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
-        storageService.delete(userPrincipal.getId(), path);
+        fileStorageService.deleteItem(userPrincipal.getId(), path);
         return "redirect:" + referer;
     }
 

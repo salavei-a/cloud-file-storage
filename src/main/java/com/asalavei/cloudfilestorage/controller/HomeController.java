@@ -1,7 +1,7 @@
 package com.asalavei.cloudfilestorage.controller;
 
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
-import com.asalavei.cloudfilestorage.service.StorageService;
+import com.asalavei.cloudfilestorage.service.FileStorageService;
 import com.asalavei.cloudfilestorage.util.BreadcrumbsUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,13 +18,13 @@ import static com.asalavei.cloudfilestorage.common.Constants.HOME_VIEW;
 @RequestMapping("/")
 public class HomeController {
 
-    private final StorageService storageService;
+    private final FileStorageService fileStorageService;
 
     @GetMapping
     public String homePage(@RequestParam(value = "path", defaultValue = "/") String path, Model model,
                            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         model.addAttribute("breadcrumbs", BreadcrumbsUtil.buildBreadcrumbs(path));
-        model.addAttribute("items", storageService.listItems(userPrincipal.getId(), path));
+        model.addAttribute("items", fileStorageService.listItems(userPrincipal.getId(), path));
         return HOME_VIEW;
     }
 }
