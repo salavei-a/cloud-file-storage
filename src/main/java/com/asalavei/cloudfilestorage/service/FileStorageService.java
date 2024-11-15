@@ -151,7 +151,7 @@ public class FileStorageService {
             String oldObjectName = String.format(OBJECT_NAME, userId, oldPath);
             String newObjectName = String.format(OBJECT_NAME, userId, newPath);
 
-            minioRepository.copyObject(bucketName, oldObjectName, newObjectName);
+            minioRepository.copyObject(bucketName, newObjectName, oldObjectName);
             deleteFile(userId, oldPath);
         } catch (Exception e) {
             throw new RuntimeException("Failed to rename file: " + oldPath, e);
