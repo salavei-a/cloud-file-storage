@@ -1,6 +1,5 @@
 services:
-  db:
-    container_name: cloud-file-storage-db
+  postgres:
     image: postgres:16-alpine
     env_file:
       - .env
@@ -11,7 +10,6 @@ services:
       - postgres-data:/var/lib/postgresql/data
 
   minio:
-    container_name: cloud-file-storage-minio
     image: minio/minio
     env_file:
       - .env
@@ -23,6 +21,15 @@ services:
       - minio-data:/data
     command: server /data --console-address ":9001"
 
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
 volumes:
   postgres-data:
   minio-data:
+  redis-data:
