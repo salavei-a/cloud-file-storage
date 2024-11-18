@@ -37,7 +37,7 @@ public class AuthController {
         }
 
         if ("true".equals(error)) {
-            model.addAttribute(ERROR_MESSAGE_ATTRIBUTE, "Incorrect username or password");
+            model.addAttribute(ERROR_MESSAGE_ATTRIBUTE, "Incorrect username or password.");
             return SIGNIN_VIEW;
         }
 
