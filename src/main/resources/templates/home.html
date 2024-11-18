@@ -113,7 +113,7 @@
     }
 
     function submitRenameForm() {
-        const newName = document.getElementById('newNameInput').value;
+        const newName = document.getElementById('newNameInput').value.trim();
         if (newName) {
             const form = document.createElement('form');
             form.method = 'post';
@@ -144,4 +144,18 @@
         }
     }
 </script>
+
+<script th:if="${message != null}">
+    const message = '[[${message}]]';
+    if (message.trim() !== '') {
+        toastr.options = {
+            "closeButton": true,
+            "positionClass": "toast-bottom-right",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000"
+        };
+        toastr.info(message);
+    }
+</script>
+
 </html>

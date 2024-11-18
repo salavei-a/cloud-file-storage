@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriUtils;
 
 import java.io.InputStream;
@@ -78,29 +79,44 @@ public class FileStorageController {
 
     @PostMapping("/upload")
     public String upload(@RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal,
-                         @RequestParam(value = "path", defaultValue = "/") String path) {
+                         @RequestParam(value = "path", defaultValue = "/") String path, RedirectAttributes redirectAttributes,
+                         @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
         files.forEach(file -> fileStorageService.uploadFile(userPrincipal.getId(), file, path));
-        return "redirect:/?path=" + path;
+
+        redirectAttributes.addFlashAttribute("message", "Upload complete");
+
+        return "redirect:" + referer;
     }
 
     @PostMapping("/{folderName}")
     public String createFolder(@PathVariable("folderName") String folderName, @AuthenticationPrincipal UserPrincipal userPrincipal,
-                               @RequestParam(value = "path", defaultValue = "/") String path) {
+                               @RequestParam(value = "path", defaultValue = "/") String path, RedirectAttributes redirectAttributes,
+                               @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
         fileStorageService.createFolder(userPrincipal.getId(), folderName, path);
-        return "redirect:/?path=" + path;
+
+        redirectAttributes.addFlashAttribute("message", "Folder created successfully");
+
+        return "redirect:" + referer;
     }
 
     @PatchMapping
-    public String rename(@RequestParam("newName") String newName, @RequestParam("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
+    public String rename(@RequestParam("newName") String newName, @AuthenticationPrincipal UserPrincipal userPrincipal,
+                         @RequestParam("path") String path, RedirectAttributes redirectAttributes,
                          @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
         fileStorageService.renameItem(userPrincipal.getId(), newName, path);
+
+        redirectAttributes.addFlashAttribute("message", "Renamed successfully");
+
         return "redirect:" + referer;
     }
 
     @DeleteMapping("/{*path}")
     public String delete(@PathVariable("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
-                         @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
+                         @RequestHeader(value = "Referer", defaultValue = "/") String referer, RedirectAttributes redirectAttributes) {
         fileStorageService.deleteItem(userPrincipal.getId(), path);
+
+        redirectAttributes.addFlashAttribute("message", "Deleted successfully");
+
         return "redirect:" + referer;
     }
 
