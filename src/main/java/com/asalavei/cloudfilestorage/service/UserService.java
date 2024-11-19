@@ -6,7 +6,6 @@ import com.asalavei.cloudfilestorage.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -14,7 +13,6 @@ import static com.asalavei.cloudfilestorage.util.CredentialsUtil.normalizeUserna
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
@@ -24,7 +22,6 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    @Transactional
     public void register(SignUpRequestDto signUpRequest) {
         User user = User.builder()
                 .username(normalizeUsername(signUpRequest.getUsername()))
