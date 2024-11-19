@@ -24,21 +24,17 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/auth/**", "/favicon.ico")
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated())
+                        .requestMatchers("/", "/storage/**").authenticated()
+                        .anyRequest().permitAll())
                 .formLogin(form -> form
                         .loginPage("/auth/signin")
-                        .permitAll()
                         .loginProcessingUrl("/auth/process-signin")
                         .failureForwardUrl("/auth/signin?error=true")
                         .defaultSuccessUrl("/", false))
                 .logout(logout -> logout
                         .logoutUrl("/auth/signout")
                         .deleteCookies("JSESSIONID")
-                        .logoutSuccessUrl("/auth/signin")
-                        .permitAll());
+                        .logoutSuccessUrl("/auth/signin"));
         return http.build();
     }
 
