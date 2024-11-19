@@ -20,7 +20,6 @@ import org.springframework.stereotype.Repository;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,159 +31,108 @@ public class MinioRepository {
 
     private final MinioClient minioClient;
 
-    public void putObject(String bucketName, String objectName, InputStream inputStream, long size, String contentType) {
+    public void save(String bucketName, String path, InputStream inputStream, long size, String contentType) {
         try {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(objectName)
+                            .object(path)
                             .stream(inputStream, size, -1)
                             .contentType(contentType)
                             .build()
             );
         } catch (MinioException e) {
-            log.error("MinIO error while putting object '{}' in bucket '{}': {}", objectName, bucketName, e.getMessage());
-            throw new RuntimeException("Failed to put object in storage: " + objectName, e);
+            log.error("Error while saving object: {} in bucket: {}", path, bucketName, e);
+            throw new RuntimeException("Failed to save: " + path);
         } catch (Exception e) {
-            log.error("Unexpected error while putting object '{}' in bucket '{}': {}", objectName, bucketName, e.getMessage());
-            throw new RuntimeException("Unexpected error during put operation for object: " + objectName, e);
+            log.error("Unexpected error while saving object: {} in bucket: {}", path, bucketName, e);
+            throw new RuntimeException("Unexpected error while saving: " + path);
         }
     }
 
-    public InputStream getObject(String bucketName, String objectName) {
+    public InputStream get(String bucketName, String path) {
         try {
             return minioClient.getObject(
                     GetObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(objectName)
+                            .object(path)
                             .build()
             );
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get object: " + objectName, e);
+            throw new RuntimeException("Failed to get: " + path, e);
         }
     }
 
-    public Map<String, InputStream> getObjects(String bucketName, String prefix) {
+    public Map<String, InputStream> getAll(String bucketName, String prefix) {
         try {
             Map<String, InputStream> inputStreams = new HashMap<>();
             Iterable<Result<Item>> results = listObjects(bucketName, prefix, true);
 
             for (Result<Item> result : results) {
-                Item item = result.get();
-                String objectName = item.objectName();
-                InputStream inputStream = getObject(bucketName, item.objectName());
+                String objectName = result.get().objectName();
+                InputStream inputStream = get(bucketName, objectName);
                 inputStreams.put(objectName, inputStream);
             }
 
             return inputStreams;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get objects: " + prefix, e);
+            throw new RuntimeException("Failed to get all with prefix: " + prefix, e);
         }
     }
 
-    public void copyObject(String bucketName, String newObjectName, String oldObjectName) {
+    public void copy(String bucketName, String destinationPath, String sourcePath) {
         try {
             CopySource source = CopySource.builder()
                     .bucket(bucketName)
-                    .object(oldObjectName)
+                    .object(sourcePath)
                     .build();
 
             minioClient.copyObject(
                     CopyObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(newObjectName)
+                            .object(destinationPath)
                             .source(source)
                             .build()
             );
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to copy object: " + oldObjectName, e);
+            log.error("Failed to copy object from path: {} to path: {}", sourcePath, destinationPath, e);
+            throw new RuntimeException(String.format("Failed to copy from path: %s to path: %s", sourcePath, destinationPath));
         }
     }
 
-    public void copyObjects(String bucketName, String newPrefix, String oldPrefix) {
+    public void copyAll(String bucketName, String destinationPrefix, String sourcePrefix) {
         try {
-            Iterable<Result<Item>> results = listObjects(bucketName, oldPrefix, true);
+            Iterable<Result<Item>> results = listObjects(bucketName, sourcePrefix, true);
 
             for (Result<Item> result : results) {
-                Item item = result.get();
-                String oldObjectName = item.objectName();
-                String relativePath = oldObjectName.substring(oldPrefix.length());
-                String newObjectName = newPrefix + relativePath;
+                String sourceObjectName = result.get().objectName();
+                String relativePath = sourceObjectName.substring(sourcePrefix.length());
+                String destinationObjectName = destinationPrefix + relativePath;
 
-                copyObject(bucketName, newObjectName, oldObjectName);
+                copy(bucketName, destinationObjectName, sourceObjectName);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to copy objects: ", e);
+            log.error("Failed to copy all objects from prefix: {} to prefix: {}", sourcePrefix, destinationPrefix, e);
+            throw new RuntimeException(String.format("Failed to copy from prefix: %s to prefix: %s", sourcePrefix, destinationPrefix));
         }
     }
 
-    public List<ItemDto> findByPath(String bucketName, String basePrefix, String prefix) {
-        try {
-            Iterable<Result<Item>> results = listObjects(bucketName, prefix, false);
-            List<ItemDto> items = new ArrayList<>();
-
-            for (Result<Item> result : results) {
-                Item item = result.get();
-                String objectName = item.objectName().replace(prefix, "");
-
-                if (!objectName.isBlank()) {
-                    items.add(ItemDto.builder()
-                            .name(objectName)
-                            .path(item.objectName().replace(basePrefix, ""))
-                            .build());
-                }
-            }
-
-            return items;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to find objects in: " + prefix, e);
-        }
-    }
-
-    public List<ItemDto> findAll(String bucketName, String basePrefix) {
-        try {
-            Iterable<Result<Item>> results = listObjects(bucketName, basePrefix, true);
-            Map<String, String> items = new HashMap<>();
-
-            for (Result<Item> result : results) {
-                Item item = result.get();
-                String path = item.objectName().replace(basePrefix, "");
-                String[] parts = item.objectName().split("/");
-                String objectName = parts[parts.length - 1];
-
-                items.put(path, objectName);
-
-                Arrays.stream(parts)
-                        .filter(part -> path.contains((part + "/")))
-                        .forEach(part -> items.put(path.substring(0, path.indexOf(part) + part.length() + 1), part + "/"));
-            }
-
-            return items.entrySet().stream()
-                    .map(entry -> ItemDto.builder()
-                            .name(entry.getValue())
-                            .path(entry.getKey())
-                            .build())
-                    .toList();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to find all objects in: " + bucketName + basePrefix, e);
-        }
-    }
-
-    public void removeObject(String bucketName, String objectName) {
+    public void delete(String bucketName, String path) {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(objectName)
+                            .object(path)
                             .build()
             );
         } catch (Exception e) {
-            throw new RuntimeException("Failed to remove object: " + objectName, e);
+            log.error("Failed to delete object: {}", path, e);
+            throw new RuntimeException("Failed to delete: " + path);
         }
     }
 
-    public void removeObjects(String bucketName, String prefix) {
+    public void deleteAll(String bucketName, String prefix) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, prefix, true);
             List<DeleteObject> objectsToDelete = new ArrayList<>();
@@ -207,10 +155,34 @@ public class MinioRepository {
 
             for (Result<DeleteError> error : errors) {
                 DeleteError deleteError = error.get();
-                log.error("Failed to remove: " + deleteError.objectName() + " - " + deleteError.message());
+                log.error("Failed to delete: {} - {}", deleteError.objectName(), deleteError.message());
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to remove objects", e);
+            log.error("Failed to delete all objects with prefix: {}", prefix, e);
+            throw new RuntimeException("Failed to delete with prefix: " + prefix);
+        }
+    }
+
+    public List<ItemDto> list(String bucketName, String prefix, boolean recursive) {
+        try {
+            Iterable<Result<Item>> results = listObjects(bucketName, prefix, recursive);
+            List<ItemDto> items = new ArrayList<>();
+
+            for (Result<Item> result : results) {
+                Item item = result.get();
+                String objectName = item.objectName();
+
+                items.add(
+                        ItemDto.builder()
+                                .path(objectName)
+                                .build()
+                );
+            }
+
+            return items;
+        } catch (Exception e) {
+            log.error("Failed to list objects in bucket: {} with prefix: {}", bucketName, prefix, e);
+            throw new RuntimeException(String.format("Failed to list items in bucket: %s with prefix: %s", bucketName, prefix));
         }
     }
 
