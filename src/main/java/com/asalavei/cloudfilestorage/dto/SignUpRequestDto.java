@@ -6,8 +6,10 @@ import com.asalavei.cloudfilestorage.validation.ValidUsername;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Value;
 
+@Builder
 @Value
 @PasswordMatches
 public class SignUpRequestDto {
