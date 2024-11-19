@@ -30,12 +30,12 @@ public class FileStorageService {
 
     private final MinioRepository minioRepository;
 
-    public void uploadFile(Long userId, MultipartFile file, String path) {
+    public void upload(Long userId, MultipartFile file, String path) {
         try {
             String objectName = String.format(OBJECT_NAME, userId, path + file.getOriginalFilename());
             minioRepository.putObject(bucketName, objectName, file.getInputStream(), file.getSize(), file.getContentType());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload file: " + file.getOriginalFilename(), e);
+            throw new RuntimeException("Failed to upload: " + file.getOriginalFilename(), e);
         }
     }
 
@@ -48,16 +48,16 @@ public class FileStorageService {
         }
     }
 
-    public InputStream downloadFile(Long userId, String path) {
+    public InputStream download(Long userId, String path) {
         try {
             String objectName = String.format(OBJECT_NAME, userId, path);
             return minioRepository.getObject(bucketName, objectName);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download file: " + path, e);
+            throw new RuntimeException("Failed to download: " + path, e);
         }
     }
 
-    public InputStream downloadFolder(Long userId, String path) {
+    public InputStream downloadAsZip(Long userId, String path) {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
             String basePrefix = String.format(BASE_PREFIX, userId);
@@ -81,16 +81,16 @@ public class FileStorageService {
 
             return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download folder: " + path, e);
+            throw new RuntimeException("Failed to download as zip: " + path, e);
         }
     }
 
-    public List<ItemDto> listItems(Long userId, String path) {
+    public List<ItemDto> list(Long userId, String path) {
         try {
             String basePrefix = String.format(BASE_PREFIX, userId);
             String prefix = String.format(OBJECT_NAME, userId, path);
 
-            return minioRepository.listItems(bucketName, basePrefix, prefix);
+            return minioRepository.findByPath(bucketName, basePrefix, prefix);
         } catch (Exception e) {
             throw new RuntimeException("Failed to list items in folder: " + path, e);
         }
@@ -107,7 +107,7 @@ public class FileStorageService {
      * @param query  the search query to filter items by name (case-insensitive)
      * @return a list of {@link ItemDto} representing the found items, each containing the item's name and path
      */
-    public List<ItemDto> searchItems(Long userId, String query) {
+    public List<ItemDto> search(Long userId, String query) {
         try {
             String basePrefix = String.format(BASE_PREFIX, userId);
             List<ItemDto> items = minioRepository.findAll(bucketName, basePrefix);
@@ -132,68 +132,45 @@ public class FileStorageService {
         }
     }
 
-    public void renameItem(Long userId, String newName, String path) {
-        boolean isFolder = isFolder(path);
-        String trimmedPath = isFolder ? path.substring(0, path.length() - 1) : path;
-        String parentPath = trimmedPath.substring(0, trimmedPath.lastIndexOf('/') + 1);
-        String newPath = parentPath + newName;
-        newPath = isFolder ? newPath + "/" : newPath;
-
-        if (isFolder) {
-            renameFolder(userId, newPath, path);
-        } else {
-            renameFile(userId, newPath, path);
-        }
-    }
-
-    private void renameFile(Long userId, String newPath, String oldPath) {
+    public void rename(Long userId, String newName, String path) {
         try {
-            String oldObjectName = String.format(OBJECT_NAME, userId, oldPath);
-            String newObjectName = String.format(OBJECT_NAME, userId, newPath);
+            String oldObjectName = String.format(OBJECT_NAME, userId, path);
+            String newObjectName = String.format(OBJECT_NAME, userId, buildNewPath(path, newName));
 
-            minioRepository.copyObject(bucketName, newObjectName, oldObjectName);
-            deleteFile(userId, oldPath);
+            if (isFile(path)) {
+                minioRepository.copyObject(bucketName, newObjectName, oldObjectName);
+            } else {
+                minioRepository.copyObjects(bucketName, newObjectName, oldObjectName);
+            }
+
+            delete(userId, path);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to rename file: " + oldPath, e);
+            throw new RuntimeException("Failed to rename: " + path, e);
         }
     }
 
-    private void renameFolder(Long userId, String newPath, String oldPath) {
-        try {
-            String oldPrefix = String.format(OBJECT_NAME, userId, oldPath);
-            String newPrefix = String.format(OBJECT_NAME, userId, newPath);
-
-            minioRepository.copyObjects(bucketName, newPrefix, oldPrefix);
-            deleteFolder(userId, oldPath);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to rename folder: " + oldPath, e);
-        }
-    }
-
-    public void deleteItem(Long userId, String path) {
-        if (isFile(path)) {
-            deleteFile(userId, path);
-        } else {
-            deleteFolder(userId, path);
-        }
-    }
-
-    private void deleteFile(Long userId, String path) {
+    public void delete(Long userId, String path) {
         try {
             String objectName = String.format(OBJECT_NAME, userId, path);
-            minioRepository.removeObject(bucketName, objectName);
+
+            if (isFile(path)) {
+                minioRepository.removeObject(bucketName, objectName);
+            } else {
+                minioRepository.removeObjects(bucketName, objectName);
+            }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to delete file: " + path, e);
+            throw new RuntimeException("Failed to delete: " + path, e);
         }
     }
 
-    private void deleteFolder(Long userId, String path) {
-        try {
-            String prefix = String.format(OBJECT_NAME, userId, path);
-            minioRepository.removeObjects(bucketName, prefix);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to delete folder: " + path, e);
-        }
+    private String buildNewPath(String path, String newName) {
+        String parentPath = getParentPath(path);
+        return isFolder(path) ? parentPath + newName + "/" : parentPath + newName;
+    }
+
+    private String getParentPath(String path) {
+        String trimmedPath = isFolder(path) ? path.substring(0, path.length() - 1) : path;
+        return trimmedPath.substring(0, trimmedPath.lastIndexOf('/') + 1);
     }
 
     private boolean isFile(String path) {

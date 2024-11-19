@@ -24,7 +24,7 @@ public class HomeController {
     public String homePage(@RequestParam(value = "path", defaultValue = "/") String path, Model model,
                            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         model.addAttribute("breadcrumbs", BreadcrumbsUtil.buildBreadcrumbs(path));
-        model.addAttribute("items", fileStorageService.listItems(userPrincipal.getId(), path));
+        model.addAttribute("items", fileStorageService.list(userPrincipal.getId(), path));
         return HOME_VIEW;
     }
 }

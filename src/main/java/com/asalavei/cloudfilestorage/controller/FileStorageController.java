@@ -42,7 +42,7 @@ public class FileStorageController {
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("path") String path,
                                                             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            InputStream inputStream = fileStorageService.downloadFile(userPrincipal.getId(), path);
+            InputStream inputStream = fileStorageService.download(userPrincipal.getId(), path);
             String filename = path.substring(path.lastIndexOf('/') + 1);
             String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(filename, StandardCharsets.UTF_8);
 
@@ -60,7 +60,7 @@ public class FileStorageController {
     public ResponseEntity<InputStreamResource> downloadFolder(@PathVariable("path") String path,
                                                               @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
-            InputStream inputStream = fileStorageService.downloadFolder(userPrincipal.getId(), path);
+            InputStream inputStream = fileStorageService.downloadAsZip(userPrincipal.getId(), path);
 
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=\"" + generateZipFilename(path) + "\"")
@@ -73,7 +73,7 @@ public class FileStorageController {
 
     @GetMapping("/search")
     public String search(@RequestParam("query") String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
-        model.addAttribute("items", fileStorageService.searchItems(userPrincipal.getId(), query));
+        model.addAttribute("items", fileStorageService.search(userPrincipal.getId(), query));
         return SEARCH_VIEW;
     }
 
@@ -81,7 +81,7 @@ public class FileStorageController {
     public String upload(@RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          @RequestParam(value = "path", defaultValue = "/") String path, RedirectAttributes redirectAttributes,
                          @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
-        files.forEach(file -> fileStorageService.uploadFile(userPrincipal.getId(), file, path));
+        files.forEach(file -> fileStorageService.upload(userPrincipal.getId(), file, path));
 
         redirectAttributes.addFlashAttribute("message", "Upload complete");
 
@@ -103,7 +103,7 @@ public class FileStorageController {
     public String rename(@RequestParam("newName") String newName, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          @RequestParam("path") String path, RedirectAttributes redirectAttributes,
                          @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
-        fileStorageService.renameItem(userPrincipal.getId(), newName, path);
+        fileStorageService.rename(userPrincipal.getId(), newName, path);
 
         redirectAttributes.addFlashAttribute("message", "Renamed successfully");
 
@@ -113,7 +113,7 @@ public class FileStorageController {
     @DeleteMapping("/{*path}")
     public String delete(@PathVariable("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          @RequestHeader(value = "Referer", defaultValue = "/") String referer, RedirectAttributes redirectAttributes) {
-        fileStorageService.deleteItem(userPrincipal.getId(), path);
+        fileStorageService.delete(userPrincipal.getId(), path);
 
         redirectAttributes.addFlashAttribute("message", "Deleted successfully");
 

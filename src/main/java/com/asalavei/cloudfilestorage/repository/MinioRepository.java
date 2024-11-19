@@ -119,7 +119,7 @@ public class MinioRepository {
         }
     }
 
-    public List<ItemDto> listItems(String bucketName, String basePrefix, String prefix) {
+    public List<ItemDto> findByPath(String bucketName, String basePrefix, String prefix) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, prefix, false);
             List<ItemDto> items = new ArrayList<>();
@@ -138,7 +138,7 @@ public class MinioRepository {
 
             return items;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to list items in: " + prefix, e);
+            throw new RuntimeException("Failed to find objects in: " + prefix, e);
         }
     }
 
@@ -167,7 +167,7 @@ public class MinioRepository {
                             .build())
                     .toList();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to find all items in prefix: " + bucketName + basePrefix, e);
+            throw new RuntimeException("Failed to find all objects in: " + bucketName + basePrefix, e);
         }
     }
 
