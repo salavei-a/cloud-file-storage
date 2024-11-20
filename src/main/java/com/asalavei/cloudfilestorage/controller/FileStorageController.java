@@ -1,10 +1,10 @@
 package com.asalavei.cloudfilestorage.controller;
 
+import com.asalavei.cloudfilestorage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
 import com.asalavei.cloudfilestorage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,33 +41,29 @@ public class FileStorageController {
     @GetMapping("/download/{*path}")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("path") String path,
                                                             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        try {
-            InputStream inputStream = fileStorageService.download(userPrincipal.getId(), path);
-            String filename = path.substring(path.lastIndexOf('/') + 1);
-            String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(filename, StandardCharsets.UTF_8);
+        String filename = path.substring(path.lastIndexOf('/') + 1);
 
+        try (InputStream inputStream = fileStorageService.download(userPrincipal.getId(), path)) {
+            String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(filename, StandardCharsets.UTF_8);
             return ResponseEntity.ok()
                     .header("Content-Disposition", contentDisposition)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(new InputStreamResource(inputStream));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(null);
+            throw new FileStorageException("Failed to download file: " + filename);
         }
     }
 
     @GetMapping("/download-multiple/{*path}")
     public ResponseEntity<InputStreamResource> downloadFolder(@PathVariable("path") String path,
                                                               @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        try {
-            InputStream inputStream = fileStorageService.downloadAsZip(userPrincipal.getId(), path);
-
+        try (InputStream inputStream = fileStorageService.downloadAsZip(userPrincipal.getId(), path)) {
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=\"" + generateZipFilename(path) + "\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(new InputStreamResource(inputStream));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw new FileStorageException("Failed to download folder as ZIP: " + getFolderName(path));
         }
     }
 
@@ -120,10 +116,13 @@ public class FileStorageController {
         return "redirect:" + referer;
     }
 
-    private static String generateZipFilename(String path) {
-        String trimmedPath = path.substring(0, path.length() - 1);
-        String folderName = trimmedPath.substring(trimmedPath.lastIndexOf("/") + 1);
+    private String generateZipFilename(String path) {
         String timestamp = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
-        return folderName + "-" + timestamp + ".zip";
+        return getFolderName(path) + "-" + timestamp + ".zip";
+    }
+
+    private String getFolderName(String path) {
+        String trimmedPath = path.substring(0, path.length() - 1);
+        return trimmedPath.substring(trimmedPath.lastIndexOf("/") + 1);
     }
 }
