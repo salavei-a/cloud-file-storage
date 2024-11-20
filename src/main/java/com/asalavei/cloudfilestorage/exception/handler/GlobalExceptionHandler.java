@@ -1,6 +1,5 @@
 package com.asalavei.cloudfilestorage.exception.handler;
 
-import com.asalavei.cloudfilestorage.exception.DatabaseOperationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -25,12 +24,6 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleException(Exception e) {
         log.error("Unexpected error occurred", e);
-        return ERROR_500_VIEW;
-    }
-
-    @ExceptionHandler(DatabaseOperationException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleDatabaseOperationException() {
         return ERROR_500_VIEW;
     }
 }
