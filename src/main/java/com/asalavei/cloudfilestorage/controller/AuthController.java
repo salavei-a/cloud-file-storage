@@ -24,20 +24,22 @@ public class AuthController {
     private final UserService userService;
 
     @GetMapping("/signin")
-    public String signInForm(@ModelAttribute(USER_ATTRIBUTE) SignInRequestDto signInRequest) {
+    public String signInForm(@RequestParam(value = "error", required = false) String error,
+                             @ModelAttribute(USER_ATTRIBUTE) SignInRequestDto signInRequest, Model model) {
+        if ("bad_credentials".equals(error)) {
+            model.addAttribute(ERROR_MESSAGE_ATTRIBUTE, "Incorrect username or password.");
+        }
+
+        if ("unexpected".equals(error)) {
+            model.addAttribute(ERROR_MESSAGE_ATTRIBUTE, "An unexpected error occurred. Please try again later.");
+        }
+
         return SIGNIN_VIEW;
     }
 
     @PostMapping("/signin")
-    public String signIn(@RequestParam(value = "error", required = false) String error,
-                         @Valid @ModelAttribute(USER_ATTRIBUTE) SignInRequestDto signInRequest, BindingResult bindingResult,
-                         Model model) {
+    public String signIn(@Valid @ModelAttribute(USER_ATTRIBUTE) SignInRequestDto signInRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return SIGNIN_VIEW;
-        }
-
-        if ("true".equals(error)) {
-            model.addAttribute(ERROR_MESSAGE_ATTRIBUTE, "Incorrect username or password.");
             return SIGNIN_VIEW;
         }
 

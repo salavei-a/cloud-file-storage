@@ -1,5 +1,7 @@
 package com.asalavei.cloudfilestorage.config;
 
+import com.asalavei.cloudfilestorage.security.CustomAuthenticationFailureHandler;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,9 +13,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -29,7 +34,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/auth/signin")
                         .loginProcessingUrl("/auth/process-signin")
-                        .failureForwardUrl("/auth/signin?error=true")
+                        .failureHandler(customAuthenticationFailureHandler)
                         .defaultSuccessUrl("/", false))
                 .logout(logout -> logout
                         .logoutUrl("/auth/signout")
