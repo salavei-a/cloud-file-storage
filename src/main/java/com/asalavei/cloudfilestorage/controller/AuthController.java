@@ -6,13 +6,11 @@ import com.asalavei.cloudfilestorage.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import static com.asalavei.cloudfilestorage.common.Constants.*;
 
@@ -24,16 +22,7 @@ public class AuthController {
     private final UserService userService;
 
     @GetMapping("/signin")
-    public String signInForm(@RequestParam(value = "error", required = false) String error,
-                             @ModelAttribute(USER_ATTRIBUTE) SignInRequestDto signInRequest, Model model) {
-        if ("bad_credentials".equals(error)) {
-            model.addAttribute(ERROR_MESSAGE_ATTRIBUTE, "Incorrect username or password.");
-        }
-
-        if ("unexpected".equals(error)) {
-            model.addAttribute(ERROR_MESSAGE_ATTRIBUTE, "An unexpected error occurred. Please try again later.");
-        }
-
+    public String signInForm(@ModelAttribute(USER_ATTRIBUTE) SignInRequestDto signInRequest) {
         return SIGNIN_VIEW;
     }
 
