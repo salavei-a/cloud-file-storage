@@ -1,6 +1,7 @@
 package com.asalavei.cloudfilestorage.repository;
 
 import com.asalavei.cloudfilestorage.dto.ItemDto;
+import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
 import io.minio.GetObjectArgs;
@@ -10,7 +11,6 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
-import io.minio.errors.MinioException;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
@@ -41,12 +41,9 @@ public class MinioRepository {
                             .contentType(contentType)
                             .build()
             );
-        } catch (MinioException e) {
-            log.error("Error while saving object: {} in bucket: {}", path, bucketName, e);
-            throw new RuntimeException("Failed to save: " + path);
         } catch (Exception e) {
-            log.error("Unexpected error while saving object: {} in bucket: {}", path, bucketName, e);
-            throw new RuntimeException("Unexpected error while saving: " + path);
+            log.error("Error while saving object: {} in bucket: {}", path, bucketName, e);
+            throw new MinioOperationException("Failed to save: " + path);
         }
     }
 
@@ -59,7 +56,8 @@ public class MinioRepository {
                             .build()
             );
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get: " + path, e);
+            log.error("Failed to retrieve object: {} from bucket: {}", path, bucketName, e);
+            throw new MinioOperationException("Failed to get: " + path);
         }
     }
 
@@ -76,7 +74,8 @@ public class MinioRepository {
 
             return inputStreams;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to get all with prefix: " + prefix, e);
+            log.error("Failed to retrieve all objects with prefix: {} from bucket: {}", prefix, bucketName, e);
+            throw new MinioOperationException("Failed to get all with prefix: " + prefix);
         }
     }
 
@@ -97,7 +96,7 @@ public class MinioRepository {
 
         } catch (Exception e) {
             log.error("Failed to copy object from path: {} to path: {}", sourcePath, destinationPath, e);
-            throw new RuntimeException(String.format("Failed to copy from path: %s to path: %s", sourcePath, destinationPath));
+            throw new MinioOperationException(String.format("Failed to copy from path: %s to path: %s", sourcePath, destinationPath));
         }
     }
 
@@ -114,7 +113,7 @@ public class MinioRepository {
             }
         } catch (Exception e) {
             log.error("Failed to copy all objects from prefix: {} to prefix: {}", sourcePrefix, destinationPrefix, e);
-            throw new RuntimeException(String.format("Failed to copy from prefix: %s to prefix: %s", sourcePrefix, destinationPrefix));
+            throw new MinioOperationException(String.format("Failed to copy from prefix: %s to prefix: %s", sourcePrefix, destinationPrefix));
         }
     }
 
@@ -128,7 +127,7 @@ public class MinioRepository {
             );
         } catch (Exception e) {
             log.error("Failed to delete object: {}", path, e);
-            throw new RuntimeException("Failed to delete: " + path);
+            throw new MinioOperationException("Failed to delete: " + path);
         }
     }
 
@@ -143,7 +142,7 @@ public class MinioRepository {
 
             if (objectsToDelete.isEmpty()) {
                 log.error("No objects found with prefix: " + prefix);
-                throw new RuntimeException("No object found to delete");
+                throw new MinioOperationException("No object found to delete");
             }
 
             Iterable<Result<DeleteError>> errors = minioClient.removeObjects(
@@ -159,7 +158,7 @@ public class MinioRepository {
             }
         } catch (Exception e) {
             log.error("Failed to delete all objects with prefix: {}", prefix, e);
-            throw new RuntimeException("Failed to delete with prefix: " + prefix);
+            throw new MinioOperationException("Failed to delete with prefix: " + prefix);
         }
     }
 
@@ -182,7 +181,7 @@ public class MinioRepository {
             return items;
         } catch (Exception e) {
             log.error("Failed to list objects in bucket: {} with prefix: {}", bucketName, prefix, e);
-            throw new RuntimeException(String.format("Failed to list items in bucket: %s with prefix: %s", bucketName, prefix));
+            throw new MinioOperationException(String.format("Failed to list items in bucket: %s with prefix: %s", bucketName, prefix));
         }
     }
 
