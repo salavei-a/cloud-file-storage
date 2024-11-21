@@ -7,7 +7,7 @@ import lombok.Value;
 @AllArgsConstructor
 @Builder
 @Value
-public class ItemDto {
+public class MinioObjectDTO {
     String name;
     String path;
 }

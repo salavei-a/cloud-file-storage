@@ -62,7 +62,7 @@ public class FileStorageController {
 
     @GetMapping("/search")
     public String search(@RequestParam("query") String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
-        model.addAttribute("items", fileStorageService.search(userPrincipal.getId(), query));
+        model.addAttribute("objects", fileStorageService.search(userPrincipal.getId(), query));
         return SEARCH_VIEW;
     }
 

@@ -1,6 +1,6 @@
 package com.asalavei.cloudfilestorage.service;
 
-import com.asalavei.cloudfilestorage.dto.ItemDto;
+import com.asalavei.cloudfilestorage.dto.MinioObjectDTO;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import com.asalavei.cloudfilestorage.repository.MinioRepository;
@@ -97,23 +97,23 @@ public class FileStorageService {
         }
     }
 
-    public List<ItemDto> list(Long userId, String path) {
+    public List<MinioObjectDTO> list(Long userId, String path) {
         String userRoot = getUserRoot(userId);
         String targetPath = getFullPath(userId, path);
 
         try {
-            List<ItemDto> storedItems = minioRepository.list(bucketName, targetPath, false);
-            List<ItemDto> items = new ArrayList<>();
+            List<MinioObjectDTO> minioObjects = minioRepository.list(bucketName, targetPath, false);
+            List<MinioObjectDTO> userObjects = new ArrayList<>();
 
-            for (ItemDto item : storedItems) {
-                String name = item.getPath().replace(targetPath, "");
+            for (MinioObjectDTO minioObject : minioObjects) {
+                String objectName = minioObject.getPath().replace(targetPath, "");
 
-                if (!name.isBlank()) {
-                    items.add(new ItemDto(name, item.getPath().replace(userRoot, "")));
+                if (!objectName.isBlank()) {
+                    userObjects.add(new MinioObjectDTO(objectName, minioObject.getPath().replace(userRoot, "")));
                 }
             }
 
-            return items;
+            return userObjects;
         } catch (MinioOperationException e) {
             log.error("Error listing objects for user '{}' at path '{}'", userId, targetPath, e);
             throw new FileStorageException("Unable to list files at path:" + path, e);
@@ -123,34 +123,34 @@ public class FileStorageService {
     /**
      * Searches for files and folders based on the specified query for a given user.
      * <ul>
-     *   <li>If the item is a file, the returned path is the folder where the file is located.</li>
-     *   <li>If the item is a folder, the returned path is the path of the folder itself.</li>
+     *   <li>If the object is a file, the returned path is the folder where the file is located.</li>
+     *   <li>If the object is a folder, the returned path is the path of the folder itself.</li>
      * </ul>
      *
      * @param userId the ID of the user whose files and folders are being searched
-     * @param query  the search query to filter items by name (case-insensitive)
-     * @return a list of {@link ItemDto} representing the found items, each containing the item's name and path
+     * @param query  the search query to filter objects by name (case-insensitive)
+     * @return a list of {@link MinioObjectDTO} representing the found objects, each containing the object's name and path
      */
-    public List<ItemDto> search(Long userId, String query) {
+    public List<MinioObjectDTO> search(Long userId, String query) {
         String userRoot = getUserRoot(userId);
         String userRootPath = getFullPath(userId, "/");
 
         try {
-            List<ItemDto> storedItems = minioRepository.list(bucketName, userRootPath, true);
-            Set<ItemDto> items = new HashSet<>();
+            List<MinioObjectDTO> minioObjects = minioRepository.list(bucketName, userRootPath, true);
+            Set<MinioObjectDTO> userObjects = new HashSet<>();
 
-            for (ItemDto item : storedItems) {
-                String path = item.getPath().replace(userRoot, "");
+            for (MinioObjectDTO minioObject : minioObjects) {
+                String objectPath = minioObject.getPath().replace(userRoot, "");
 
-                if (isFile(item.getPath())) {
-                    items.add(new ItemDto(getFileName(path), getParentFolderPath(path)));
+                if (isFile(objectPath)) {
+                    userObjects.add(new MinioObjectDTO(getFileName(objectPath), getParentFolderPath(objectPath)));
                 }
 
-                items.addAll(getParentFolders(path));
+                userObjects.addAll(getParentFolders(objectPath));
             }
 
-            return items.stream()
-                    .filter(item -> item.getName().toLowerCase().contains(query.toLowerCase()))
+            return userObjects.stream()
+                    .filter(object -> object.getName().toLowerCase().contains(query.toLowerCase()))
                     .toList();
         } catch (MinioOperationException e) {
             log.error("Error searching objects for user '{}' with query '{}' at path '{}'", userId, query, userRootPath, e);
@@ -226,10 +226,10 @@ public class FileStorageService {
         return path.substring(0, path.lastIndexOf("/") + 1);
     }
 
-    private List<ItemDto> getParentFolders(String path) {
+    private List<MinioObjectDTO> getParentFolders(String path) {
         return Arrays.stream(path.split("/"))
                 .filter(part -> !part.isEmpty() && path.contains(part + "/"))
-                .map(part -> new ItemDto(
+                .map(part -> new MinioObjectDTO(
                         part + "/",
                         path.substring(0, path.indexOf(part) + part.length() + 1)
                 ))

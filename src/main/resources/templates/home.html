@@ -65,23 +65,23 @@
     </span>
 </div>
 
-<div th:if="${items != null and !#lists.isEmpty(items)}">
-    <div th:each="item : ${items}">
-        <span th:if="${!#strings.endsWith(item.getName(), '/')}">
-            <span th:text="${item.getName()}"></span>
-            <a th:href="@{/storage/download{path}(path=${item.getPath()})}" class="btn btn-link">Download</a>
+<div th:if="${objects != null and !#lists.isEmpty(objects)}">
+    <div th:each="object : ${objects}">
+        <span th:if="${!#strings.endsWith(object.getName(), '/')}">
+            <span th:text="${object.getName()}"></span>
+            <a th:href="@{/storage/download{path}(path=${object.getPath()})}" class="btn btn-link">Download</a>
         </span>
 
-        <span th:if="${#strings.endsWith(item.getName(), '/')}">
-            <a th:if="${!item.getName().isBlank()}"
-               th:href="@{'/?path=' + ${item.getPath()}}"
-               th:text="${item.getName().substring(0, item.getName().length() - 1)}"></a>
-            <a th:href="@{/storage/download-multiple{path}(path=${item.getPath()})}" class="btn btn-link">Download</a>
+        <span th:if="${#strings.endsWith(object.getName(), '/')}">
+            <a th:if="${!object.getName().isBlank()}"
+               th:href="@{'/?path=' + ${object.getPath()}}"
+               th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
+            <a th:href="@{/storage/download-multiple{path}(path=${object.getPath()})}" class="btn btn-link">Download</a>
         </span>
 
-        <button type="button" class="btn btn-danger btn-sm" th:attr="onclick=|openRenameModal('${item.getPath()}')|">Rename</button>
+        <button type="button" class="btn btn-danger btn-sm" th:attr="onclick=|openRenameModal('${object.getPath()}')|">Rename</button>
 
-        <form th:action="@{'/storage' + ${item.getPath()}}" method="post" class="d-inline">
+        <form th:action="@{'/storage' + ${object.getPath()}}" method="post" class="d-inline">
             <input type="hidden" name="_method" value="delete"/>
             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
         </form>

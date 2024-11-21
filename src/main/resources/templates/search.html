@@ -12,18 +12,18 @@
     </form>
 
     <h2>Search results</h2>
-    <div th:if="${items != null and !#lists.isEmpty(items)}">
-        <div th:each="item : ${items}">
-            <span th:if="${!#strings.endsWith(item.getName(), '/')}">
-                <a th:href="@{'/?path=' + ${item.getPath()}}" th:text="${item.getName()}"></a>
+    <div th:if="${objects != null and !#lists.isEmpty(objects)}">
+        <div th:each="object : ${objects}">
+            <span th:if="${!#strings.endsWith(object.getName(), '/')}">
+                <a th:href="@{'/?path=' + ${object.getPath()}}" th:text="${object.getName()}"></a>
             </span>
-            <span th:if="${#strings.endsWith(item.getName(), '/')}">
-                <a th:if="${!item.getName().isBlank()}" th:href="@{'/?path=' + ${item.getPath()}}" th:text="${item.getName().substring(0, item.getName().length() - 1)}"></a>
+            <span th:if="${#strings.endsWith(object.getName(), '/')}">
+                <a th:if="${!object.getName().isBlank()}" th:href="@{'/?path=' + ${object.getPath()}}" th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
             </span>
         </div>
     </div>
 
-    <div th:if="${items == null or #lists.isEmpty(items)}">
+    <div th:if="${objects == null or #lists.isEmpty(objects)}">
         <p>No matching results</p>
     </div>
 </div>

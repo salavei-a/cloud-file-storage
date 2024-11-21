@@ -1,6 +1,6 @@
 package com.asalavei.cloudfilestorage.repository;
 
-import com.asalavei.cloudfilestorage.dto.ItemDto;
+import com.asalavei.cloudfilestorage.dto.MinioObjectDTO;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
@@ -161,19 +161,23 @@ public class MinioRepository {
         }
     }
 
-    public List<ItemDto> list(String bucketName, String prefix, boolean recursive) {
+    public List<MinioObjectDTO> list(String bucketName, String prefix, boolean recursive) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, prefix, recursive);
-            List<ItemDto> items = new ArrayList<>();
+            List<MinioObjectDTO> minioObject = new ArrayList<>();
 
             for (Result<Item> result : results) {
                 Item item = result.get();
                 String objectName = item.objectName();
 
-                items.add(ItemDto.builder().path(objectName).build());
+                minioObject.add(
+                        MinioObjectDTO.builder()
+                                .path(objectName)
+                                .build()
+                );
             }
 
-            return items;
+            return minioObject;
         } catch (Exception e) {
             log.error("Error listing objects from bucket '{}' with prefix '{}'", bucketName, prefix, e);
             throw new MinioOperationException(String.format("Failed to list objects with prefix '%s'", prefix));
