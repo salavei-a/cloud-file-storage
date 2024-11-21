@@ -19,6 +19,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,8 @@ public class FileStorageService {
                 }
             }
 
+            sortObjects(userObjects);
+
             return userObjects;
         } catch (MinioOperationException e) {
             log.error("Error listing objects for user '{}' at path '{}'", userId, targetPath, e);
@@ -151,6 +154,7 @@ public class FileStorageService {
 
             return userObjects.stream()
                     .filter(object -> object.getName().toLowerCase().contains(query.toLowerCase()))
+                    .sorted(Comparator.comparing(object -> object.getName().toLowerCase()))
                     .toList();
         } catch (MinioOperationException e) {
             log.error("Error searching objects for user '{}' with query '{}' at path '{}'", userId, query, userRootPath, e);
@@ -252,5 +256,22 @@ public class FileStorageService {
 
     private boolean isFolder(String path) {
         return path.endsWith("/");
+    }
+
+    private void sortObjects(List<MinioObjectDTO> userObjects) {
+        userObjects.sort((o1, o2) -> {
+            boolean isFolder1 = isFolder(o1.getPath());
+            boolean isFolder2 = isFolder(o2.getPath());
+
+            if (isFolder1 && !isFolder2) {
+                return -1;
+            }
+
+            if (!isFolder1 && isFolder2) {
+                return 1;
+            }
+
+            return o1.getPath().compareToIgnoreCase(o2.getPath());
+        });
     }
 }
