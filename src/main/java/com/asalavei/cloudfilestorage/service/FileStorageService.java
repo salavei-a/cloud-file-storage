@@ -14,6 +14,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -54,7 +57,7 @@ public class FileStorageService {
         }
     }
 
-    public InputStream download(Long userId, String path) {
+    public InputStream downloadFile(Long userId, String path) {
         try {
             return minioRepository.get(bucketName, getFullPath(userId, path));
         } catch (MinioOperationException e) {
@@ -62,7 +65,7 @@ public class FileStorageService {
         }
     }
 
-    public InputStream downloadAsZip(Long userId, String path) {
+    public InputStream downloadFolderAsZip(Long userId, String path) {
         String userRoot = getUserRoot(userId);
         String prefix = getFullPath(userId, path);
 
@@ -190,8 +193,13 @@ public class FileStorageService {
         return getFileName(path.substring(0, path.length() - 1));
     }
 
-    private String getFileName(String path) {
-        return path.substring(path.lastIndexOf("/") + 1);
+    public String getFileName(String path) {
+        return path.substring(path.lastIndexOf('/') + 1);
+    }
+
+    public String generateZipFilename(String path) {
+        String timestamp = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
+        return getFolderName(path) + "-" + timestamp + ".zip";
     }
 
     private String getObjectName(String path) {

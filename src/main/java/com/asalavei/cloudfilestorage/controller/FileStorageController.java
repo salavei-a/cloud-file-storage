@@ -1,6 +1,5 @@
 package com.asalavei.cloudfilestorage.controller;
 
-import com.asalavei.cloudfilestorage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
 import com.asalavei.cloudfilestorage.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriUtils;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static com.asalavei.cloudfilestorage.common.Constants.SEARCH_VIEW;
@@ -42,31 +37,27 @@ public class FileStorageController {
     @GetMapping("/download/{*path}")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("path") String path,
                                                             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        String filename = path.substring(path.lastIndexOf('/') + 1);
+        InputStream inputStream = fileStorageService.downloadFile(userPrincipal.getId(), path);
+        String fileName = fileStorageService.getFileName(path);
+        String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(fileName, StandardCharsets.UTF_8);
 
-        try (InputStream inputStream = fileStorageService.download(userPrincipal.getId(), path)) {
-            String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(filename, StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header("Content-Disposition", contentDisposition)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(new InputStreamResource(inputStream));
 
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", contentDisposition)
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(new InputStreamResource(inputStream));
-        } catch (IOException e) {
-            throw new FileStorageException("Unable to download file: " + filename);
-        }
     }
 
     @GetMapping("/download-multiple/{*path}")
     public ResponseEntity<InputStreamResource> downloadFolder(@PathVariable("path") String path,
                                                               @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        try (InputStream inputStream = fileStorageService.downloadAsZip(userPrincipal.getId(), path)) {
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"" + generateZipFilename(path) + "\"")
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(new InputStreamResource(inputStream));
-        } catch (IOException e) {
-            throw new FileStorageException("Unable to download folder: " + fileStorageService.getFolderName(path));
-        }
+        InputStream inputStream = fileStorageService.downloadFolderAsZip(userPrincipal.getId(), path);
+        String fileName = fileStorageService.generateZipFilename(path);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(new InputStreamResource(inputStream));
     }
 
     @GetMapping("/search")
@@ -116,10 +107,5 @@ public class FileStorageController {
         redirectAttributes.addFlashAttribute("message", "Deleted successfully");
 
         return "redirect:" + referer;
-    }
-
-    private String generateZipFilename(String path) {
-        String timestamp = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
-        return fileStorageService.getFolderName(path) + "-" + timestamp + ".zip";
     }
 }
