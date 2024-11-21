@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -45,12 +46,13 @@ public class FileStorageController {
 
         try (InputStream inputStream = fileStorageService.download(userPrincipal.getId(), path)) {
             String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(filename, StandardCharsets.UTF_8);
+
             return ResponseEntity.ok()
                     .header("Content-Disposition", contentDisposition)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(new InputStreamResource(inputStream));
-        } catch (Exception e) {
-            throw new FileStorageException("Failed to download file: " + filename);
+        } catch (IOException e) {
+            throw new FileStorageException("Unable to download file: " + filename);
         }
     }
 
@@ -62,8 +64,8 @@ public class FileStorageController {
                     .header("Content-Disposition", "attachment; filename=\"" + generateZipFilename(path) + "\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(new InputStreamResource(inputStream));
-        } catch (Exception e) {
-            throw new FileStorageException("Failed to download folder as ZIP: " + getFolderName(path));
+        } catch (IOException e) {
+            throw new FileStorageException("Unable to download folder: " + fileStorageService.getFolderName(path));
         }
     }
 
@@ -118,11 +120,6 @@ public class FileStorageController {
 
     private String generateZipFilename(String path) {
         String timestamp = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
-        return getFolderName(path) + "-" + timestamp + ".zip";
-    }
-
-    private String getFolderName(String path) {
-        String trimmedPath = path.substring(0, path.length() - 1);
-        return trimmedPath.substring(trimmedPath.lastIndexOf("/") + 1);
+        return fileStorageService.getFolderName(path) + "-" + timestamp + ".zip";
     }
 }
