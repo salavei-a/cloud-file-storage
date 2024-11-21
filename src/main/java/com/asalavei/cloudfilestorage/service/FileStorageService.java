@@ -2,6 +2,7 @@ package com.asalavei.cloudfilestorage.service;
 
 import com.asalavei.cloudfilestorage.dto.ItemDto;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
+import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import com.asalavei.cloudfilestorage.repository.MinioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,66 +37,84 @@ public class FileStorageService {
         try {
             String fullPath = getFullPath(userId, path + file.getOriginalFilename());
             minioRepository.save(bucketName, fullPath, file.getInputStream(), file.getSize(), file.getContentType());
-        } catch (Exception e) {
-            log.error("Failed to upload file: {} for user: {} at path: {}", file.getOriginalFilename(), userId, path, e);
-            throw new FileStorageException("Failed to upload file: " + file.getOriginalFilename());
+        } catch (IOException e) {
+            log.error("IOException occurred while uploading file '{}' for user '{}' at path '{}'", file.getOriginalFilename(), userId, path);
+            throw new FileStorageException("Unable to upload file: " + file.getOriginalFilename(), e);
+        } catch (MinioOperationException e) {
+            throw new FileStorageException("Unable to upload file: " + file.getOriginalFilename(), e);
         }
     }
 
     public void createFolder(Long userId, String folderName, String path) {
-        String folderPath = getFullPath(userId, path + folderName.trim() + "/");
-        minioRepository.save(bucketName, folderPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
+        try {
+            String folderPath = getFullPath(userId, path + normalizeObjectName(folderName) + "/");
+            minioRepository.save(bucketName, folderPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
+        } catch (MinioOperationException e) {
+            throw new FileStorageException("Unable to create folder: " + folderName, e);
+        }
     }
 
     public InputStream download(Long userId, String path) {
-        return minioRepository.get(bucketName, getFullPath(userId, path));
+        try {
+            return minioRepository.get(bucketName, getFullPath(userId, path));
+        } catch (MinioOperationException e) {
+            throw new FileStorageException("Unable to download file: " + getFileName(path), e);
+        }
     }
 
     public InputStream downloadAsZip(Long userId, String path) {
+        String userRoot = getUserRoot(userId);
+        String prefix = getFullPath(userId, path);
+
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-            String userRoot = getUserRoot(userId);
-            String prefix = getFullPath(userId, path);
-
             Map<String, InputStream> objects = minioRepository.getAll(bucketName, prefix);
 
             for (Map.Entry<String, InputStream> entry : objects.entrySet()) {
-                InputStream inputStream = entry.getValue();
-                String fullObjectPath = entry.getKey();
+                try (InputStream inputStream = entry.getValue()) {
+                    String fullObjectPath = entry.getKey();
 
-                String trimmedPath = path.substring(0, path.length() - 1);
-                String folderPrefix = trimmedPath.substring(0, trimmedPath.lastIndexOf('/') + 1);
-                String relativePath = fullObjectPath.replace(userRoot + folderPrefix, "");
+                    String trimmedPath = path.substring(0, path.length() - 1);
+                    String folderPrefix = trimmedPath.substring(0, trimmedPath.lastIndexOf('/') + 1);
+                    String relativePath = fullObjectPath.replace(userRoot + folderPrefix, "");
 
-                zipOutputStream.putNextEntry(new ZipEntry(relativePath));
-                inputStream.transferTo(zipOutputStream);
-                zipOutputStream.closeEntry();
+                    zipOutputStream.putNextEntry(new ZipEntry(relativePath));
+                    inputStream.transferTo(zipOutputStream);
+                    zipOutputStream.closeEntry();
+                }
             }
 
             zipOutputStream.finish();
-
             return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-        } catch (Exception e) {
-            log.error("Failed to create zip for user: {} at path: {}", userId, path, e);
-            throw new FileStorageException("Failed to download folder as ZIP");
+        } catch (IOException e) {
+            log.error("IOException occurred while creating zip for user '{}' at path '{}'", userId, prefix, e);
+            throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
+        } catch (MinioOperationException e) {
+            throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
         }
     }
 
     public List<ItemDto> list(Long userId, String path) {
         String userRoot = getUserRoot(userId);
         String targetPath = getFullPath(userId, path);
-        List<ItemDto> storedItems = minioRepository.list(bucketName, targetPath, false);
-        List<ItemDto> items = new ArrayList<>();
 
-        for (ItemDto item : storedItems) {
-            String name = item.getPath().replace(targetPath, "");
+        try {
+            List<ItemDto> storedItems = minioRepository.list(bucketName, targetPath, false);
+            List<ItemDto> items = new ArrayList<>();
 
-            if (!name.isBlank()) {
-                items.add(new ItemDto(name, item.getPath().replace(userRoot, "")));
+            for (ItemDto item : storedItems) {
+                String name = item.getPath().replace(targetPath, "");
+
+                if (!name.isBlank()) {
+                    items.add(new ItemDto(name, item.getPath().replace(userRoot, "")));
+                }
             }
-        }
 
-        return items;
+            return items;
+        } catch (MinioOperationException e) {
+            log.error("Error listing objects for user '{}' at path '{}'", userId, targetPath, e);
+            throw new FileStorageException("Unable to list files at path:" + path, e);
+        }
     }
 
     /**
@@ -111,44 +131,74 @@ public class FileStorageService {
     public List<ItemDto> search(Long userId, String query) {
         String userRoot = getUserRoot(userId);
         String userRootPath = getFullPath(userId, "/");
-        List<ItemDto> storedItems = minioRepository.list(bucketName, userRootPath, true);
-        Set<ItemDto> items = new HashSet<>();
 
-        for (ItemDto item : storedItems) {
-            String path = item.getPath().replace(userRoot, "");
+        try {
+            List<ItemDto> storedItems = minioRepository.list(bucketName, userRootPath, true);
+            Set<ItemDto> items = new HashSet<>();
 
-            if (isFile(item.getPath())) {
-                items.add(new ItemDto(getFileName(path), getParentFolderPath(path)));
+            for (ItemDto item : storedItems) {
+                String path = item.getPath().replace(userRoot, "");
+
+                if (isFile(item.getPath())) {
+                    items.add(new ItemDto(getFileName(path), getParentFolderPath(path)));
+                }
+
+                items.addAll(getParentFolders(path));
             }
 
-            items.addAll(getParentFolders(path));
+            return items.stream()
+                    .filter(item -> item.getName().toLowerCase().contains(query.toLowerCase()))
+                    .toList();
+        } catch (MinioOperationException e) {
+            log.error("Error searching objects for user '{}' with query '{}' at path '{}'", userId, query, userRootPath, e);
+            throw new FileStorageException("Unable to search with query: " + query, e);
         }
-
-        return items.stream()
-                .filter(item -> item.getName().toLowerCase().contains(query.toLowerCase()))
-                .toList();
     }
 
     public void rename(Long userId, String newName, String path) {
-        String oldPath = getFullPath(userId, path);
-        String newPath = getFullPath(userId, buildNewPath(path, newName.trim()));
+        try {
+            String oldPath = getFullPath(userId, path);
+            String newPath = getFullPath(userId, buildNewPath(path, normalizeObjectName(newName)));
 
-        if (isFile(path)) {
-            minioRepository.copy(bucketName, newPath, oldPath);
-        } else {
-            minioRepository.copyAll(bucketName, newPath, oldPath);
+            if (isFile(path)) {
+                minioRepository.copy(bucketName, newPath, oldPath);
+            } else {
+                minioRepository.copyAll(bucketName, newPath, oldPath);
+            }
+
+            delete(userId, path);
+        } catch (MinioOperationException e) {
+            throw new FileStorageException("Unable to rename: " + getObjectName(path), e);
         }
-
-        delete(userId, path);
     }
 
     public void delete(Long userId, String path) {
-        String fullPath = getFullPath(userId, path);
+        try {
+            String fullPath = getFullPath(userId, path);
 
+            if (isFile(path)) {
+                minioRepository.delete(bucketName, fullPath);
+            } else {
+                minioRepository.deleteAll(bucketName, fullPath);
+            }
+        } catch (MinioOperationException e) {
+            throw new FileStorageException("Unable to delete: " + getObjectName(path), e);
+        }
+    }
+
+    public String getFolderName(String path) {
+        return getFileName(path.substring(0, path.length() - 1));
+    }
+
+    private String getFileName(String path) {
+        return path.substring(path.lastIndexOf("/") + 1);
+    }
+
+    private String getObjectName(String path) {
         if (isFile(path)) {
-            minioRepository.delete(bucketName, fullPath);
+            return getFileName(path);
         } else {
-            minioRepository.deleteAll(bucketName, fullPath);
+            return getFolderName(path);
         }
     }
 
@@ -156,12 +206,12 @@ public class FileStorageService {
         return String.format("user-%s-files", userId);
     }
 
-    private String getFullPath(Long userId, String path) {
-        return getUserRoot(userId) + path;
+    private String normalizeObjectName(String objectName) {
+        return objectName.trim();
     }
 
-    private String getFileName(String path) {
-        return path.substring(path.lastIndexOf("/") + 1);
+    private String getFullPath(Long userId, String path) {
+        return getUserRoot(userId) + path;
     }
 
     private String getParentFolderPath(String path) {
