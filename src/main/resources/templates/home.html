@@ -5,97 +5,116 @@
 
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-<form class="d-flex my-4" th:action="@{/storage/search}" method="get">
-    <input class="form-control me-2" type="text" name="query" placeholder="Search in Storage" required>
-    <button class="btn btn-outline-success" type="submit">Search</button>
-</form>
+<div class="container mt-4">
+    <form class="d-flex mb-4" th:action="@{/storage/search}" method="get">
+        <input class="form-control me-2" type="text" name="query" placeholder="Search in Storage" required>
+        <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
 
-<h2>File upload</h2>
-<form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="path" th:value="${param.path}" />
-    <div>
-        <input type="file" id="file" name="files" multiple required />
-        <button type="submit">Upload File</button>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4 h-100">
+                <div class="card-body">
+                    <form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="path" th:value="${param.path}" />
+                        <div class="mb-3">
+                            <input class="form-control" type="file" id="file" name="files" multiple required />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Upload Files</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4 h-100">
+                <div class="card-body">
+                    <form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="path" th:value="${param.path}" />
+                        <div class="mb-3">
+                            <input class="form-control" type="file" id="folder" name="files" webkitdirectory multiple required />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Upload Folder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4 h-100">
+                <div class="card-body">
+                    <form id="newFolderForm" method="post">
+                        <input type="hidden" name="path" th:value="${param.path}" />
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="folderName" name="folderName" placeholder="Folder name" required />
+                        </div>
+                        <button type="button" class="btn btn-success w-100" onclick="submitForm()">Create Folder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-</form>
 
-<br>
+    <h3>Files</h3>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li th:each="breadcrumb, iterStat : ${breadcrumbs}" class="breadcrumb-item" th:classappend="${iterStat.last} ? 'active' : ''" aria-current="page">
+                <a th:if="${!iterStat.last}" th:href="@{'/?path=' + ${breadcrumb.path()}}" th:text="${breadcrumb.name()}"></a>
+                <span th:if="${iterStat.last}" th:text="${breadcrumb.name()}"></span>
+            </li>
+        </ol>
+    </nav>
 
-<h2>Folder upload</h2>
-<form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="path" th:value="${param.path}" />
-    <div>
-        <input type="file" id="folder" name="files" webkitdirectory multiple required />
-        <button type="submit">Upload Folder</button>
+    <div th:if="${objects != null and !#lists.isEmpty(objects)}">
+        <div class="list-group">
+            <div th:each="object : ${objects}" class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <!-- Folder Icon -->
+                    <i th:if="${#strings.endsWith(object.getName(), '/')}" class="bi bi-folder-fill text-warning me-2"></i>
+                    <!-- File Icon -->
+                    <i th:if="${!#strings.endsWith(object.getName(), '/')}" class="bi bi-file-earmark-fill text-secondary me-2"></i>
+                    <!-- Name -->
+                    <a th:if="${#strings.endsWith(object.getName(), '/')}"
+                       th:href="@{'/?path=' + ${object.getPath()}}"
+                       th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
+                    <span th:if="${!#strings.endsWith(object.getName(), '/')}" th:text="${object.getName()}"></span>
+                </div>
+                <div>
+                    <!-- Download Button -->
+                    <a th:if="${#strings.endsWith(object.getName(), '/')}"
+                       th:href="@{/storage/download-multiple{path}(path=${object.getPath()})}" class="btn btn-sm btn-outline-primary me-2">Download</a>
+                    <a th:if="${!#strings.endsWith(object.getName(), '/')}"
+                       th:href="@{/storage/download{path}(path=${object.getPath()})}" class="btn btn-sm btn-outline-primary me-2">Download</a>
+                    <!-- Rename Button -->
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" th:attr="onclick=|openRenameModal('${object.getPath()}')|">Rename</button>
+                    <!-- Delete Button -->
+                    <form th:action="@{'/storage' + ${object.getPath()}}" method="post" class="d-inline">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-</form>
 
-<br>
-
-<h2>New folder</h2>
-<form id="newFolderForm" method="post">
-    <input type="hidden" name="path" th:value="${param.path}" />
-    <div>
-        <input type="text" id="folderName" name="folderName" placeholder="Folder name" required />
-        <button type="button" onclick="submitForm()">Create Folder</button>
+    <div th:if="${objects == null or #lists.isEmpty(objects)}" class="alert alert-info">
+        <p>No files or folders found in this directory.</p>
     </div>
-</form>
-
-<script>
-    function submitForm() {
-        const folderName = document.getElementById('folderName').value;
-        if (folderName) {
-            const form = document.getElementById('newFolderForm');
-            form.action = `/storage/${encodeURIComponent(folderName)}`;
-            form.submit();
-        } else {
-            alert("Please enter a folder name.");
-        }
-    }
-</script>
-
-<br>
-
-<h2>Files:</h2>
-<div>
-    <span th:each="breadcrumb, iterStat : ${breadcrumbs}">
-        <span th:if="${!iterStat.first}"> / </span>
-        <a th:if="${iterStat.first}" th:href="@{/}" th:text="${breadcrumb.name()}"></a>
-        <a th:if="${!iterStat.first}" th:href="@{'/?path=' + ${breadcrumb.path()}}" th:text="${breadcrumb.name()}"></a>
-    </span>
 </div>
 
-<div th:if="${objects != null and !#lists.isEmpty(objects)}">
-    <div th:each="object : ${objects}">
-        <span th:if="${!#strings.endsWith(object.getName(), '/')}">
-            <span th:text="${object.getName()}"></span>
-            <a th:href="@{/storage/download{path}(path=${object.getPath()})}" class="btn btn-link">Download</a>
-        </span>
-
-        <span th:if="${#strings.endsWith(object.getName(), '/')}">
-            <a th:if="${!object.getName().isBlank()}"
-               th:href="@{'/?path=' + ${object.getPath()}}"
-               th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
-            <a th:href="@{/storage/download-multiple{path}(path=${object.getPath()})}" class="btn btn-link">Download</a>
-        </span>
-
-        <button type="button" class="btn btn-danger btn-sm" th:attr="onclick=|openRenameModal('${object.getPath()}')|">Rename</button>
-
-        <form th:action="@{'/storage' + ${object.getPath()}}" method="post" class="d-inline">
-            <input type="hidden" name="_method" value="delete"/>
-            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-        </form>
-    </div>
-</div>
-
-</body>
-
-<div id="renameModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);">
-    <div style="background-color: #fff; padding: 20px; margin: 100px auto; width: 300px; border-radius: 10px;">
-        <h3>Rename</h3>
-        <input type="text" id="newNameInput" required style="width: 100%; margin-bottom: 10px;">
-        <button type="button" onclick="submitRenameForm()">OK</button>
-        <button type="button" onclick="closeRenameModal()">Cancel</button>
+<div class="modal" tabindex="-1" id="renameModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rename</h5>
+                <button type="button" class="btn-close" onclick="closeRenameModal()"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="newNameInput" class="form-control" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="submitRenameForm()">OK</button>
+                <button type="button" class="btn btn-secondary" onclick="closeRenameModal()">Cancel</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -104,11 +123,11 @@
 
     function openRenameModal(path) {
         currentPath = path;
-        document.getElementById('renameModal').style.display = 'block';
+        $('#renameModal').modal('show');
     }
 
     function closeRenameModal() {
-        document.getElementById('renameModal').style.display = 'none';
+        $('#renameModal').modal('hide');
         currentPath = '';
     }
 
@@ -129,7 +148,7 @@
             pathInput.type = 'hidden';
             pathInput.name = 'path';
             pathInput.value = `${currentPath}`;
-            form.appendChild(pathInput)
+            form.appendChild(pathInput);
 
             const newNameInput = document.createElement('input');
             newNameInput.type = 'hidden';
@@ -141,6 +160,17 @@
             form.submit();
         } else {
             alert('Please enter a new name.');
+        }
+    }
+
+    function submitForm() {
+        const folderName = document.getElementById('folderName').value;
+        if (folderName) {
+            const form = document.getElementById('newFolderForm');
+            form.action = `/storage/${encodeURIComponent(folderName)}`;
+            form.submit();
+        } else {
+            alert("Please enter a folder name.");
         }
     }
 </script>
@@ -158,4 +188,5 @@
     }
 </script>
 
+</body>
 </html>

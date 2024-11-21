@@ -1,12 +1,12 @@
 <div th:fragment="errorMessages">
-    <div class="error-container">
-        <div class="error" th:if="${#fields.hasAnyErrors()}">
-            <ul>
+    <div class="error-container mt-2">
+        <div class="alert alert-danger" th:if="${#fields.hasAnyErrors()}">
+            <ul class="mb-0">
                 <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
             </ul>
         </div>
-        <div class="error" th:if="${errorMessage}">
-            <p th:text="${errorMessage}"></p>
+        <div class="alert alert-danger" th:if="${errorMessage}">
+            <p class="mb-0" th:text="${errorMessage}"></p>
         </div>
     </div>
 </div>

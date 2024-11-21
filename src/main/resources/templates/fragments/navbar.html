@@ -1,12 +1,17 @@
-<nav th:fragment="navbar" class="navbar navbar-light bg-light" xmlns:sec="http://www.w3.org/1999/xhtml">
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light" xmlns:sec="http://www.thymeleaf.org">
     <div class="container-fluid">
         <a class="navbar-brand" th:href="@{/}">Cloud File Storage</a>
-        <div class="d-flex align-items-center">
-            <div sec:authorize="isAuthenticated()">
-                <span class="navbar-text me-2" sec:authentication="name"></span></div>
-            <form th:action="@{/auth/signout}" method="post" class="d-inline mb-0">
-                <button class="btn btn-outline-danger" type="submit">Sign out</button>
-            </form>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+            <div sec:authorize="isAuthenticated()" class="d-flex align-items-center">
+                <span class="navbar-text me-2" sec:authentication="name"></span>
+                <form th:action="@{/auth/signout}" method="post" class="d-inline mb-0">
+                    <button class="btn btn-outline-danger" type="submit">Sign Out</button>
+                </form>
+            </div>
         </div>
     </div>
 </nav>

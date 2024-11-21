@@ -6,25 +6,28 @@
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="container mt-4">
-    <form class="d-flex my-4" th:action="@{/storage/search}" method="get">
+    <form class="d-flex mb-4" th:action="@{/storage/search}" method="get">
         <input class="form-control me-2" type="text" name="query" placeholder="Search in Storage" required>
         <button class="btn btn-outline-success" type="submit">Search</button>
     </form>
 
-    <h2>Search results</h2>
+    <h3>Search Results</h3>
     <div th:if="${objects != null and !#lists.isEmpty(objects)}">
-        <div th:each="object : ${objects}">
-            <span th:if="${!#strings.endsWith(object.getName(), '/')}">
-                <a th:href="@{'/?path=' + ${object.getPath()}}" th:text="${object.getName()}"></a>
-            </span>
-            <span th:if="${#strings.endsWith(object.getName(), '/')}">
-                <a th:if="${!object.getName().isBlank()}" th:href="@{'/?path=' + ${object.getPath()}}" th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
-            </span>
+        <div class="list-group">
+            <div th:each="object : ${objects}" class="list-group-item">
+                <!-- Folder Icon -->
+                <i th:if="${#strings.endsWith(object.getName(), '/')}" class="bi bi-folder-fill text-warning me-2"></i>
+                <!-- File Icon -->
+                <i th:if="${!#strings.endsWith(object.getName(), '/')}" class="bi bi-file-earmark-fill text-secondary me-2"></i>
+                <!-- Name -->
+                <a th:if="${#strings.endsWith(object.getName(), '/')}" th:href="@{'/?path=' + ${object.getPath()}}" th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
+                <a th:if="${!#strings.endsWith(object.getName(), '/')}" th:href="@{'/?path=' + ${object.getPath()}}" th:text="${object.getName()}"></a>
+            </div>
         </div>
     </div>
 
-    <div th:if="${objects == null or #lists.isEmpty(objects)}">
-        <p>No matching results</p>
+    <div th:if="${objects == null or #lists.isEmpty(objects)}" class="alert alert-info">
+        <p>No matching results found.</p>
     </div>
 </div>
 
