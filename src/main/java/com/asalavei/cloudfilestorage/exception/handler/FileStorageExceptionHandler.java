@@ -1,7 +1,7 @@
 package com.asalavei.cloudfilestorage.exception.handler;
 
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
-import com.asalavei.cloudfilestorage.exception.MinioOperationException;
+import com.asalavei.cloudfilestorage.util.HttpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,22 +24,12 @@ public class FileStorageExceptionHandler {
                                              HttpServletRequest request) {
         log.error("File storage operation failed: {}", e.getMessage(), e);
         redirectAttributes.addFlashAttribute("message", e.getMessage());
-        return "redirect:" + getReferer(request);
+        return HttpUtils.redirectToReferer(request);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public String handleMaxUploadSizeExceededException(RedirectAttributes redirectAttributes, HttpServletRequest request) {
         redirectAttributes.addFlashAttribute("message", "The uploaded file is too large. Maximum allowed size is " + maxFileSize);
-        return "redirect:" + getReferer(request);
-    }
-
-    private String getReferer(HttpServletRequest request) {
-        String referer = request.getHeader("Referer");
-
-        if (referer == null || referer.isBlank()) {
-            referer = HOME_URL;
-        }
-
-        return referer;
+        return HttpUtils.redirectToReferer(request);
     }
 }

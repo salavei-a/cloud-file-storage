@@ -2,6 +2,8 @@ package com.asalavei.cloudfilestorage.controller;
 
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
 import com.asalavei.cloudfilestorage.service.FileStorageService;
+import com.asalavei.cloudfilestorage.util.HttpUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -69,43 +70,38 @@ public class FileStorageController {
     @PostMapping("/upload")
     public String upload(@RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          @RequestParam(value = "path", defaultValue = "/") String path, RedirectAttributes redirectAttributes,
-                         @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
+                         HttpServletRequest request) {
         files.forEach(file -> fileStorageService.upload(userPrincipal.getId(), file, path));
 
         redirectAttributes.addFlashAttribute("message", "Upload complete");
-
-        return "redirect:" + referer;
+        return HttpUtils.redirectToReferer(request);
     }
 
     @PostMapping("/{folderName}")
     public String createFolder(@PathVariable("folderName") String folderName, @AuthenticationPrincipal UserPrincipal userPrincipal,
                                @RequestParam(value = "path", defaultValue = "/") String path, RedirectAttributes redirectAttributes,
-                               @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
+                               HttpServletRequest request) {
         fileStorageService.createFolder(userPrincipal.getId(), folderName, path);
 
         redirectAttributes.addFlashAttribute("message", "Folder created successfully");
-
-        return "redirect:" + referer;
+        return HttpUtils.redirectToReferer(request);
     }
 
     @PatchMapping
     public String rename(@RequestParam("newName") String newName, @AuthenticationPrincipal UserPrincipal userPrincipal,
-                         @RequestParam("path") String path, RedirectAttributes redirectAttributes,
-                         @RequestHeader(value = "Referer", defaultValue = "/") String referer) {
+                         @RequestParam("path") String path, RedirectAttributes redirectAttributes, HttpServletRequest request) {
         fileStorageService.rename(userPrincipal.getId(), newName, path);
 
         redirectAttributes.addFlashAttribute("message", "Renamed successfully");
-
-        return "redirect:" + referer;
+        return HttpUtils.redirectToReferer(request);
     }
 
     @DeleteMapping("/{*path}")
     public String delete(@PathVariable("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
-                         @RequestHeader(value = "Referer", defaultValue = "/") String referer, RedirectAttributes redirectAttributes) {
+                         RedirectAttributes redirectAttributes, HttpServletRequest request) {
         fileStorageService.delete(userPrincipal.getId(), path);
 
         redirectAttributes.addFlashAttribute("message", "Deleted successfully");
-
-        return "redirect:" + referer;
+        return HttpUtils.redirectToReferer(request);
     }
 }
