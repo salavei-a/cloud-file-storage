@@ -14,7 +14,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,8 +34,8 @@ public class FileStorageController {
 
     private final FileStorageService fileStorageService;
 
-    @GetMapping("/download/{*path}")
-    public ResponseEntity<InputStreamResource> downloadFile(@PathVariable("path") String path,
+    @GetMapping("/download")
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam("path") String path,
                                                             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         InputStream inputStream = fileStorageService.downloadFile(userPrincipal.getId(), path);
         String fileName = fileStorageService.getFileName(path);
@@ -49,8 +48,8 @@ public class FileStorageController {
 
     }
 
-    @GetMapping("/download-multiple/{*path}")
-    public ResponseEntity<InputStreamResource> downloadFolder(@PathVariable("path") String path,
+    @GetMapping("/download-multiple")
+    public ResponseEntity<InputStreamResource> downloadFolder(@RequestParam("path") String path,
                                                               @AuthenticationPrincipal UserPrincipal userPrincipal) {
         InputStream inputStream = fileStorageService.downloadFolderAsZip(userPrincipal.getId(), path);
         String fileName = fileStorageService.generateZipFilename(path);
@@ -77,8 +76,8 @@ public class FileStorageController {
         return HttpUtils.redirectToReferer(request);
     }
 
-    @PostMapping("/{folderName}")
-    public String createFolder(@PathVariable("folderName") String folderName, @AuthenticationPrincipal UserPrincipal userPrincipal,
+    @PostMapping("/folders")
+    public String createFolder(@RequestParam("folderName") String folderName, @AuthenticationPrincipal UserPrincipal userPrincipal,
                                @RequestParam(value = "path", defaultValue = "/") String path, RedirectAttributes redirectAttributes,
                                HttpServletRequest request) {
         fileStorageService.createFolder(userPrincipal.getId(), folderName, path);
@@ -96,8 +95,8 @@ public class FileStorageController {
         return HttpUtils.redirectToReferer(request);
     }
 
-    @DeleteMapping("/{*path}")
-    public String delete(@PathVariable("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
+    @DeleteMapping
+    public String delete(@RequestParam("path") String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          RedirectAttributes redirectAttributes, HttpServletRequest request) {
         fileStorageService.delete(userPrincipal.getId(), path);
 

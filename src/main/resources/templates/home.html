@@ -41,12 +41,12 @@
         <div class="col-md-4">
             <div class="card mb-4 h-100">
                 <div class="card-body">
-                    <form id="newFolderForm" method="post">
+                    <form id="newFolderForm" method="post" action="/storage/folders">
                         <input type="hidden" name="path" th:value="${param.path}" />
                         <div class="mb-3">
                             <input type="text" class="form-control" id="folderName" name="folderName" placeholder="Folder name" required />
                         </div>
-                        <button type="button" class="btn btn-success w-100" onclick="submitForm()">Create Folder</button>
+                        <button type="submit" class="btn btn-success w-100">Create Folder</button>
                     </form>
                 </div>
             </div>
@@ -56,8 +56,8 @@
     <h3>Files</h3>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li th:each="breadcrumb, iterStat : ${breadcrumbs}" class="breadcrumb-item" th:classappend="${iterStat.last} ? 'active' : ''" aria-current="page">
-                <a th:if="${!iterStat.last}" th:href="@{'/?path=' + ${breadcrumb.path()}}" th:text="${breadcrumb.name()}"></a>
+            <li th:each="breadcrumb, iterStat : ${breadcrumbs}" class="breadcrumb-item"th:classappend="${iterStat.last} ? 'active' : ''" aria-current="page">
+                <a th:if="${!iterStat.last}" th:href="@{'/' (path=${breadcrumb.path()})}" th:text="${breadcrumb.name()}"></a>
                 <span th:if="${iterStat.last}" th:text="${breadcrumb.name()}"></span>
             </li>
         </ol>
@@ -73,20 +73,21 @@
                     <i th:if="${!#strings.endsWith(object.getName(), '/')}" class="bi bi-file-earmark-fill text-secondary me-2"></i>
                     <!-- Name -->
                     <a th:if="${#strings.endsWith(object.getName(), '/')}"
-                       th:href="@{'/?path=' + ${object.getPath()}}"
+                       th:href="@{'/' (path=${object.getPath()})}"
                        th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
                     <span th:if="${!#strings.endsWith(object.getName(), '/')}" th:text="${object.getName()}"></span>
                 </div>
                 <div>
                     <!-- Download Button -->
                     <a th:if="${#strings.endsWith(object.getName(), '/')}"
-                       th:href="@{/storage/download-multiple{path}(path=${object.getPath()})}" class="btn btn-sm btn-outline-primary me-2">Download</a>
+                       th:href="@{/storage/download-multiple (path=${object.getPath()})}" class="btn btn-sm btn-outline-primary me-2">Download</a>
                     <a th:if="${!#strings.endsWith(object.getName(), '/')}"
-                       th:href="@{/storage/download{path}(path=${object.getPath()})}" class="btn btn-sm btn-outline-primary me-2">Download</a>
+                       th:href="@{/storage/download (path=${object.getPath()})}" class="btn btn-sm btn-outline-primary me-2">Download</a>
                     <!-- Rename Button -->
-                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" th:attr="onclick=|openRenameModal('${object.getPath()}')|">Rename</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2"
+                            th:attr="onclick=|openRenameModal('${object.getPath()}')|">Rename</button>
                     <!-- Delete Button -->
-                    <form th:action="@{'/storage' + ${object.getPath()}}" method="post" class="d-inline">
+                    <form th:action="@{/storage (path=${object.getPath()})}" method="post" class="d-inline">
                         <input type="hidden" name="_method" value="delete"/>
                         <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                     </form>
@@ -160,17 +161,6 @@
             form.submit();
         } else {
             alert('Please enter a new name.');
-        }
-    }
-
-    function submitForm() {
-        const folderName = document.getElementById('folderName').value;
-        if (folderName) {
-            const form = document.getElementById('newFolderForm');
-            form.action = `/storage/${encodeURIComponent(folderName)}`;
-            form.submit();
-        } else {
-            alert("Please enter a folder name.");
         }
     }
 </script>
