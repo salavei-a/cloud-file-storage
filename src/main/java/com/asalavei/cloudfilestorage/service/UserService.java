@@ -22,10 +22,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public Optional<User> getUser(String username) {
-        return userRepository.findByUsername(username);
-    }
-
     public void register(SignUpRequestDto signUpRequest) {
         User user = User.builder()
                 .username(normalizeUsername(signUpRequest.getUsername()))
@@ -35,8 +31,12 @@ public class UserService {
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            log.debug("username={} is already taken", user.getUsername(), e);
+            log.debug("username '{}' is already taken", user.getUsername(), e);
             throw new UserAlreadyExistsException("Username is already taken.");
         }
+    }
+
+    public Optional<User> getUser(String username) {
+        return userRepository.findByUsername(normalizeUsername(username));
     }
 }
