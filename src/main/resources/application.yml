@@ -33,3 +33,7 @@ minio:
   bucket:
     name: user-files
   url: http://localhost:9000
+
+server:
+  tomcat:
+    max-swallow-size: -1
