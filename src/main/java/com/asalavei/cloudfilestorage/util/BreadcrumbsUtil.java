@@ -6,23 +6,27 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.asalavei.cloudfilestorage.common.Constants.HOME_URL;
+
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BreadcrumbsUtil {
 
+    private static final String DELIMITER = "/";
+
     public static List<Breadcrumb> buildBreadcrumbs(String path) {
         List<Breadcrumb> breadcrumbs = new ArrayList<>();
-        breadcrumbs.add(new Breadcrumb("Home", "/"));
+        breadcrumbs.add(new Breadcrumb("Home", HOME_URL));
 
-        if (!path.endsWith("/")) {
-            path = path.substring(0, path.lastIndexOf("/") + 1);
+        if (!isFolder(path)) {
+            path = path.substring(0, path.lastIndexOf(DELIMITER) + 1);
         }
 
-        String[] parts = path.split("/");
-        StringBuilder currentPath = new StringBuilder("/");
+        String[] parts = path.split(DELIMITER);
+        StringBuilder currentPath = new StringBuilder(DELIMITER);
 
         for (String part : parts) {
             if (!part.isBlank()) {
-                currentPath.append(part).append("/");
+                currentPath.append(part).append(DELIMITER);
                 breadcrumbs.add(new Breadcrumb(part, currentPath.toString()));
             }
         }
@@ -31,5 +35,9 @@ public class BreadcrumbsUtil {
     }
 
     public record Breadcrumb(String name, String path) {
+    }
+
+    private static boolean isFolder(String path) {
+        return path.endsWith(DELIMITER);
     }
 }
