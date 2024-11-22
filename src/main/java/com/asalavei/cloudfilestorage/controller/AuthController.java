@@ -5,6 +5,8 @@ import com.asalavei.cloudfilestorage.dto.SignUpRequestDto;
 import com.asalavei.cloudfilestorage.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +25,10 @@ public class AuthController {
 
     @GetMapping("/signin")
     public String signInForm(@ModelAttribute(USER_ATTRIBUTE) SignInRequestDto signInRequest) {
+        if (isAuthenticated()) {
+            return REDIRECT_HOME;
+        }
+
         return SIGNIN_VIEW;
     }
 
@@ -37,6 +43,10 @@ public class AuthController {
 
     @GetMapping("/signup")
     public String signUpForm(@ModelAttribute(USER_ATTRIBUTE) SignUpRequestDto signUpRequest) {
+        if (isAuthenticated()) {
+            return REDIRECT_HOME;
+        }
+
         return SIGNUP_VIEW;
     }
 
@@ -48,5 +58,10 @@ public class AuthController {
 
         userService.register(signUpRequest);
         return REDIRECT_SIGNIN;
+    }
+
+    private boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser");
     }
 }
