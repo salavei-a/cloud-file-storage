@@ -219,7 +219,7 @@ public class FileStorageService {
     }
 
     private String normalizeObjectName(String objectName) {
-        return objectName.trim();
+        return objectName.replace("/", "");
     }
 
     private String getFullPath(Long userId, String path) {
