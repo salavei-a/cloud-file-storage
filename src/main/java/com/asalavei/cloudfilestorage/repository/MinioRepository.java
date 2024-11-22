@@ -2,6 +2,7 @@ package com.asalavei.cloudfilestorage.repository;
 
 import com.asalavei.cloudfilestorage.dto.MinioObjectDTO;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
+import com.asalavei.cloudfilestorage.exception.NoObjectFoundException;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
 import io.minio.GetObjectArgs;
@@ -11,6 +12,7 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
+import io.minio.errors.ErrorResponseException;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
@@ -55,8 +57,14 @@ public class MinioRepository {
                             .object(path)
                             .build()
             );
+        } catch (ErrorResponseException e) {
+            if ("NoSuchKey".equals(e.errorResponse().code())) {
+                throw new NoObjectFoundException("No object found in MinIO: " + path);
+            }
+            throw new MinioOperationException(
+                    String.format("Failed to retrieve object '%s': %s", path, e.errorResponse().message()), e
+            );
         } catch (Exception e) {
-            log.error("Error retrieving object '{}' from bucket '{}'", path, bucketName, e);
             throw new MinioOperationException("Failed to retrieve object: " + path, e);
         }
     }
@@ -72,9 +80,14 @@ public class MinioRepository {
                 inputStreams.put(objectName, inputStream);
             }
 
+            if (inputStreams.isEmpty()) {
+                throw new NoObjectFoundException("No objects found in MinIO with prefix: " + prefix);
+            }
+
             return inputStreams;
+        } catch (NoObjectFoundException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Error retrieving objects from bucket '{}' with prefix '{}'", bucketName, prefix, e);
             throw new MinioOperationException("Failed to retrieve objects with prefix: " + prefix, e);
         }
     }

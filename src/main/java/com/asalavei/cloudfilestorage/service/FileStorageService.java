@@ -4,6 +4,7 @@ import com.asalavei.cloudfilestorage.dto.MinioObjectDTO;
 import com.asalavei.cloudfilestorage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
+import com.asalavei.cloudfilestorage.exception.NoObjectFoundException;
 import com.asalavei.cloudfilestorage.repository.MinioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +62,13 @@ public class FileStorageService {
     public InputStream downloadFile(Long userId, String path) {
         try {
             return minioRepository.get(bucketName, getFullPath(userId, path));
+        } catch (NoObjectFoundException e) {
+            log.warn("File not found '{}' for user '{}'", path, userId, e);
+            throw new FileStorageException(
+                    String.format("Unable to download file '%s' because it does not exist", getFileName(path)), e
+            );
         } catch (MinioOperationException e) {
+            log.error("MinIO error while downloading file for user '{}', path '{}'", userId, path, e);
             throw new FileStorageException("Unable to download file: " + getFileName(path), e);
         }
     }
@@ -87,10 +94,16 @@ public class FileStorageService {
 
             zipOutputStream.finish();
             return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        } catch (NoObjectFoundException e) {
+            log.warn("Folder not found for user '{}', path '{}'", userId, path, e);
+            throw new FileStorageException(
+                    String.format("Unable to download folder '%s' because it does not exist", getFolderName(path)), e
+            );
+        } catch (MinioOperationException e) {
+            log.error("MinIO error while downloading folder for user '{}', path '{}'", userId, path, e);
+            throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
         } catch (IOException e) {
             log.error("IOException occurred while creating zip for user '{}' at path '{}'", userId, prefix, e);
-            throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
-        } catch (MinioOperationException e) {
             throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
         }
     }
