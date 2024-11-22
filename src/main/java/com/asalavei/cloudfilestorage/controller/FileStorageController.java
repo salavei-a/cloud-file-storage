@@ -38,21 +38,20 @@ public class FileStorageController {
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam("path") String path,
                                                             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         InputStream inputStream = fileStorageService.downloadFile(userPrincipal.getId(), path);
-        String fileName = fileStorageService.getFileName(path);
-        String contentDisposition = "attachment; filename*=UTF-8''" + UriUtils.encode(fileName, StandardCharsets.UTF_8);
+        String fileName = UriUtils.encode(fileStorageService.getFileName(path), StandardCharsets.UTF_8);
+        String contentDisposition = "attachment; filename*=UTF-8''" + fileName;
 
         return ResponseEntity.ok()
                 .header("Content-Disposition", contentDisposition)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(inputStream));
-
     }
 
     @GetMapping("/download-multiple")
     public ResponseEntity<InputStreamResource> downloadFolder(@RequestParam("path") String path,
                                                               @AuthenticationPrincipal UserPrincipal userPrincipal) {
         InputStream inputStream = fileStorageService.downloadFolderAsZip(userPrincipal.getId(), path);
-        String fileName = fileStorageService.generateZipFilename(path);
+        String fileName = UriUtils.encode(fileStorageService.generateZipFilename(path), StandardCharsets.UTF_8);
 
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
