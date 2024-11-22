@@ -22,10 +22,6 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
-logging:
-  level:
-    org.springframework.security: DEBUG
-
 minio:
   access:
     name: minioadmin
