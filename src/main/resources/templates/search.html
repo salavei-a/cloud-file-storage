@@ -20,11 +20,11 @@
                 <!-- File Icon -->
                 <i th:if="${!#strings.endsWith(object.getName(), '/')}" class="bi bi-file-earmark-fill text-secondary me-2"></i>
                 <!-- Name -->
-                <a th:if="${#strings.endsWith(object.getName(), '/')}"
+                <a th:if="${#strings.endsWith(object.getName(), '/')}" class="preserve-whitespace"
                    th:href="@{'/' (path=${object.getPath()})}"
                    th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
 
-                <a th:if="${!#strings.endsWith(object.getName(), '/')}"
+                <a th:if="${!#strings.endsWith(object.getName(), '/')}" class="preserve-whitespace"
                    th:href="@{'/' (path=${object.getPath()})}" th:text="${object.getName()}"></a>
             </div>
         </div>

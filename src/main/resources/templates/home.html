@@ -74,8 +74,8 @@
                     <!-- Name -->
                     <a th:if="${#strings.endsWith(object.getName(), '/')}"
                        th:href="@{'/' (path=${object.getPath()})}"
-                       th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
-                    <span th:if="${!#strings.endsWith(object.getName(), '/')}" th:text="${object.getName()}"></span>
+                       class="preserve-whitespace" th:text="${object.getName().substring(0, object.getName().length() - 1)}"></a>
+                    <span th:if="${!#strings.endsWith(object.getName(), '/')}" class="preserve-whitespace" th:text="${object.getName()}"></span>
                 </div>
                 <div>
                     <!-- Download Button -->
@@ -133,7 +133,7 @@
     }
 
     function submitRenameForm() {
-        const newName = document.getElementById('newNameInput').value.trim();
+        const newName = document.getElementById('newNameInput').value;
         if (newName) {
             const form = document.createElement('form');
             form.method = 'post';
