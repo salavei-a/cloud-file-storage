@@ -84,7 +84,7 @@ public class FileStorageService {
             for (Map.Entry<String, InputStream> entry : objects.entrySet()) {
                 try (InputStream inputStream = entry.getValue()) {
                     String fullObjectPath = entry.getKey();
-                    String relativeObjectPath = fullObjectPath.replace(userRoot + getParentPath(path), "");
+                    String relativeObjectPath = getRelativePath(fullObjectPath, userRoot + getParentPath(path));
 
                     zipOutputStream.putNextEntry(new ZipEntry(relativeObjectPath));
                     inputStream.transferTo(zipOutputStream);
@@ -112,19 +112,19 @@ public class FileStorageService {
         try {
             String userRoot = getUserRoot(userId);
             String targetPath = getFullPath(userId, path);
-            String baseFolderName = getFolderName(path);
 
             List<MinioObjectDTO> minioObjects = minioRepository.list(bucketName, targetPath, false);
             List<MinioObjectDTO> userObjects = new ArrayList<>();
 
             for (MinioObjectDTO minioObject : minioObjects) {
-                String objectName = getObjectName(minioObject.getPath());
+                String fullObjectPath = minioObject.getPath();
+                String relativeObjectPath = getRelativePath(fullObjectPath, targetPath);
 
-                if (!objectName.equals(baseFolderName)) {
-                    String objectPath = minioObject.getPath().replace(userRoot, "");
+                if (!relativeObjectPath.isBlank()) {
+                    String objectPath = getRelativePath(fullObjectPath, userRoot);
 
                     userObjects.add(MinioObjectDTO.builder()
-                            .name(objectName)
+                            .name(getObjectName(relativeObjectPath))
                             .path(objectPath)
                             .isFolder(isFolder(objectPath))
                             .build()
@@ -160,7 +160,7 @@ public class FileStorageService {
             Set<MinioObjectDTO> userObjects = new HashSet<>();
 
             for (MinioObjectDTO minioObject : minioObjects) {
-                String objectPath = minioObject.getPath().replace(userRoot, "");
+                String objectPath = getRelativePath(minioObject.getPath(), userRoot);
 
                 if (!isFolder(objectPath)) {
                     userObjects.add(MinioObjectDTO.builder()
@@ -234,6 +234,10 @@ public class FileStorageService {
         } else {
             return getFileName(path);
         }
+    }
+
+    private String getRelativePath(String fullPath, String prefix) {
+        return fullPath.replace(prefix, "");
     }
 
     private String getUserRoot(Long userId) {
