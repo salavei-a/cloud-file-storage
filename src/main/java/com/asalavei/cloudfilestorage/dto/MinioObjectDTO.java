@@ -10,4 +10,5 @@ import lombok.Value;
 public class MinioObjectDTO {
     String name;
     String path;
+    Boolean isFolder;
 }

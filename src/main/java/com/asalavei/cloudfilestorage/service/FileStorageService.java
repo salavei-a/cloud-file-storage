@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -33,10 +32,10 @@ import java.util.zip.ZipOutputStream;
 @RequiredArgsConstructor
 public class FileStorageService {
 
+    private final MinioRepository minioRepository;
+
     @Value("${minio.bucket.name}")
     private String bucketName;
-
-    private final MinioRepository minioRepository;
 
     public void upload(Long userId, MultipartFile file, String path) {
         try {
@@ -78,12 +77,9 @@ public class FileStorageService {
             for (Map.Entry<String, InputStream> entry : objects.entrySet()) {
                 try (InputStream inputStream = entry.getValue()) {
                     String fullObjectPath = entry.getKey();
+                    String relativeObjectPath = fullObjectPath.replace(userRoot + getParentPath(path), "");
 
-                    String trimmedPath = path.substring(0, path.length() - 1);
-                    String folderPrefix = trimmedPath.substring(0, trimmedPath.lastIndexOf('/') + 1);
-                    String relativePath = fullObjectPath.replace(userRoot + folderPrefix, "");
-
-                    zipOutputStream.putNextEntry(new ZipEntry(relativePath));
+                    zipOutputStream.putNextEntry(new ZipEntry(relativeObjectPath));
                     inputStream.transferTo(zipOutputStream);
                     zipOutputStream.closeEntry();
                 }
@@ -100,18 +96,26 @@ public class FileStorageService {
     }
 
     public List<MinioObjectDTO> list(Long userId, String path) {
-        String userRoot = getUserRoot(userId);
-        String targetPath = getFullPath(userId, path);
-
         try {
+            String userRoot = getUserRoot(userId);
+            String targetPath = getFullPath(userId, path);
+            String baseFolderName = getFolderName(path);
+
             List<MinioObjectDTO> minioObjects = minioRepository.list(bucketName, targetPath, false);
             List<MinioObjectDTO> userObjects = new ArrayList<>();
 
             for (MinioObjectDTO minioObject : minioObjects) {
-                String objectName = minioObject.getPath().replace(targetPath, "");
+                String objectName = getObjectName(minioObject.getPath());
 
-                if (!objectName.isBlank()) {
-                    userObjects.add(new MinioObjectDTO(objectName, minioObject.getPath().replace(userRoot, "")));
+                if (!objectName.equals(baseFolderName)) {
+                    String objectPath = minioObject.getPath().replace(userRoot, "");
+
+                    userObjects.add(MinioObjectDTO.builder()
+                            .name(objectName)
+                            .path(objectPath)
+                            .isFolder(isFolder(objectPath))
+                            .build()
+                    );
                 }
             }
 
@@ -145,8 +149,13 @@ public class FileStorageService {
             for (MinioObjectDTO minioObject : minioObjects) {
                 String objectPath = minioObject.getPath().replace(userRoot, "");
 
-                if (isFile(objectPath)) {
-                    userObjects.add(new MinioObjectDTO(getFileName(objectPath), getParentFolderPath(objectPath)));
+                if (!isFolder(objectPath)) {
+                    userObjects.add(MinioObjectDTO.builder()
+                            .name(getFileName(objectPath))
+                            .path(getParentFolderPath(objectPath))
+                            .isFolder(false)
+                            .build()
+                    );
                 }
 
                 userObjects.addAll(getParentFolders(objectPath));
@@ -167,10 +176,10 @@ public class FileStorageService {
             String oldPath = getFullPath(userId, path);
             String newPath = getFullPath(userId, buildNewPath(path, normalizeObjectName(newName)));
 
-            if (isFile(path)) {
-                minioRepository.copy(bucketName, newPath, oldPath);
-            } else {
+            if (isFolder(path)) {
                 minioRepository.copyAll(bucketName, newPath, oldPath);
+            } else {
+                minioRepository.copy(bucketName, newPath, oldPath);
             }
 
             delete(userId, path);
@@ -183,10 +192,10 @@ public class FileStorageService {
         try {
             String fullPath = getFullPath(userId, path);
 
-            if (isFile(path)) {
-                minioRepository.delete(bucketName, fullPath);
-            } else {
+            if (isFolder(path)) {
                 minioRepository.deleteAll(bucketName, fullPath);
+            } else {
+                minioRepository.delete(bucketName, fullPath);
             }
         } catch (MinioOperationException e) {
             throw new FileStorageException("Unable to delete: " + getObjectName(path), e);
@@ -207,10 +216,10 @@ public class FileStorageService {
     }
 
     private String getObjectName(String path) {
-        if (isFile(path)) {
-            return getFileName(path);
-        } else {
+        if (isFolder(path)) {
             return getFolderName(path);
+        } else {
+            return getFileName(path);
         }
     }
 
@@ -231,13 +240,21 @@ public class FileStorageService {
     }
 
     private List<MinioObjectDTO> getParentFolders(String path) {
-        return Arrays.stream(path.split("/"))
-                .filter(part -> !part.isEmpty() && path.contains(part + "/"))
-                .map(part -> new MinioObjectDTO(
-                        part + "/",
-                        path.substring(0, path.indexOf(part) + part.length() + 1)
-                ))
-                .toList();
+        List<MinioObjectDTO> parentFolders = new ArrayList<>();
+        StringBuilder currentPath = new StringBuilder("/");
+
+        for (String part : path.split("/")) {
+            if (!part.isEmpty() && path.contains(part + "/")) {
+                currentPath.append(part).append("/");
+                parentFolders.add(MinioObjectDTO.builder()
+                        .name(part)
+                        .path(currentPath.toString())
+                        .isFolder(true)
+                        .build());
+            }
+        }
+
+        return parentFolders;
     }
 
     private String buildNewPath(String path, String newName) {
@@ -246,12 +263,8 @@ public class FileStorageService {
     }
 
     private String getParentPath(String path) {
-        String trimmedPath = isFolder(path) ? path.substring(0, path.length() - 1) : path;
-        return trimmedPath.substring(0, trimmedPath.lastIndexOf('/') + 1);
-    }
-
-    private boolean isFile(String path) {
-        return !path.endsWith("/");
+        String pathToExtractParent = isFolder(path) ? path.substring(0, path.length() - 1) : path;
+        return pathToExtractParent.substring(0, pathToExtractParent.lastIndexOf('/') + 1);
     }
 
     private boolean isFolder(String path) {
