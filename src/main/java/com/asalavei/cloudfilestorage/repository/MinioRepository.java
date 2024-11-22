@@ -43,7 +43,7 @@ public class MinioRepository {
             );
         } catch (Exception e) {
             log.error("Error saving object '{}' to bucket '{}'", path, bucketName, e);
-            throw new MinioOperationException("Failed to save object: " + path);
+            throw new MinioOperationException("Failed to save object: " + path, e);
         }
     }
 
@@ -57,7 +57,7 @@ public class MinioRepository {
             );
         } catch (Exception e) {
             log.error("Error retrieving object '{}' from bucket '{}'", path, bucketName, e);
-            throw new MinioOperationException("Failed to retrieve object: " + path);
+            throw new MinioOperationException("Failed to retrieve object: " + path, e);
         }
     }
 
@@ -75,7 +75,7 @@ public class MinioRepository {
             return inputStreams;
         } catch (Exception e) {
             log.error("Error retrieving objects from bucket '{}' with prefix '{}'", bucketName, prefix, e);
-            throw new MinioOperationException("Failed to retrieve objects with prefix: " + prefix);
+            throw new MinioOperationException("Failed to retrieve objects with prefix: " + prefix, e);
         }
     }
 
@@ -95,7 +95,7 @@ public class MinioRepository {
             );
         } catch (Exception e) {
             log.error("Error copying object in bucket '{}' from '{}' to '{}'", bucketName, sourcePath, destinationPath, e);
-            throw new MinioOperationException(String.format("Failed to copy object from: '%s' to: '%s'", sourcePath, destinationPath));
+            throw new MinioOperationException(String.format("Failed to copy object from: '%s' to: '%s'", sourcePath, destinationPath), e);
         }
     }
 
@@ -112,7 +112,7 @@ public class MinioRepository {
             }
         } catch (Exception e) {
             log.error("Error copying objects in bucket '{}' from prefix '{}' to prefix '{}'", bucketName, sourcePrefix, destinationPrefix, e);
-            throw new MinioOperationException(String.format("Failed to copy objects from prefix '%s' to prefix '%s'", sourcePrefix, destinationPrefix));
+            throw new MinioOperationException(String.format("Failed to copy objects from prefix '%s' to prefix '%s'", sourcePrefix, destinationPrefix), e);
         }
     }
 
@@ -126,7 +126,7 @@ public class MinioRepository {
             );
         } catch (Exception e) {
             log.error("Error deleting object '{}' from bucket '{}'", path, bucketName, e);
-            throw new MinioOperationException("Failed to delete object: " + path);
+            throw new MinioOperationException("Failed to delete object: " + path, e);
         }
     }
 
@@ -157,7 +157,7 @@ public class MinioRepository {
             }
         } catch (Exception e) {
             log.error("Error deleting objects from bucket '{}' with prefix '{}'", bucketName, prefix, e);
-            throw new MinioOperationException("Failed to delete objects with prefix: " + prefix);
+            throw new MinioOperationException("Failed to delete objects with prefix: " + prefix, e);
         }
     }
 
@@ -180,7 +180,7 @@ public class MinioRepository {
             return minioObject;
         } catch (Exception e) {
             log.error("Error listing objects from bucket '{}' with prefix '{}'", bucketName, prefix, e);
-            throw new MinioOperationException(String.format("Failed to list objects with prefix '%s'", prefix));
+            throw new MinioOperationException(String.format("Failed to list objects with prefix '%s'", prefix), e);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.asalavei.cloudfilestorage.service;
 
 import com.asalavei.cloudfilestorage.dto.MinioObjectDTO;
+import com.asalavei.cloudfilestorage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import com.asalavei.cloudfilestorage.repository.MinioRepository;
@@ -118,8 +119,7 @@ public class FileStorageService {
 
             return userObjects;
         } catch (MinioOperationException e) {
-            log.error("Error listing objects for user '{}' at path '{}'", userId, targetPath, e);
-            throw new FileStorageException("Unable to list files at path:" + path, e);
+            throw new FileListingException("Unable to list files at path:" + path, e);
         }
     }
 
