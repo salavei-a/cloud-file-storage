@@ -5,6 +5,7 @@ import com.asalavei.cloudfilestorage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import com.asalavei.cloudfilestorage.exception.NoObjectFoundException;
+import com.asalavei.cloudfilestorage.exception.ObjectExistsException;
 import com.asalavei.cloudfilestorage.repository.MinioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,23 +40,33 @@ public class FileStorageService {
     private String bucketName;
 
     public void upload(Long userId, MultipartFile file, String path) {
-        String fullPath = getFullPath(userId, path + file.getOriginalFilename());
+        String fileName = file.getOriginalFilename();
+        String fullPath = getFullPath(userId, path + fileName);
+
         try {
+            if (isObjectExists(bucketName, fullPath)) {
+                throw new ObjectExistsException("There is already a file or folder with file name you uploaded");
+            }
+
             minioRepository.save(bucketName, fullPath, file.getInputStream(), file.getSize(), file.getContentType());
         } catch (MinioOperationException | IOException e) {
             log.error("Error while uploading file '{}' for user '{}', bucket '{}', path '{}'",
                     file.getOriginalFilename(), userId, bucketName, fullPath, e);
-            throw new FileStorageException("Unable to upload file: " + file.getOriginalFilename());
+            throw new FileStorageException("Unable to upload file: " + fileName);
         }
     }
 
     public void createFolder(Long userId, String folderName, String path) {
-        String folderPath = getFullPath(userId, path + normalizeObjectName(folderName) + "/");
+        String folderFullPath = getFullPath(userId, path + normalizeObjectName(folderName) + "/");
         try {
-            minioRepository.save(bucketName, folderPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
+            if (isObjectExists(bucketName, folderFullPath)) {
+                throw new ObjectExistsException("There is already a file or folder with folder name you created");
+            }
+
+            minioRepository.save(bucketName, folderFullPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
         } catch (MinioOperationException e) {
             log.error("Error while creating folder '{}' for user '{}', bucket '{}', path '{}'",
-                    folderName, userId, bucketName, folderPath, e);
+                    folderName, userId, bucketName, folderFullPath, e);
             throw new FileStorageException("Unable to create folder: " + folderName);
         }
     }
@@ -192,6 +203,10 @@ public class FileStorageService {
         String destinationPath = getFullPath(userId, buildNewPath(path, normalizeObjectName(newName)));
 
         try {
+            if (isObjectExists(bucketName, sourcePath)) {
+                throw new ObjectExistsException("There is already a file or folder with name you specified. Specify a different name");
+            }
+
             if (isFolder(path)) {
                 minioRepository.copyAll(bucketName, destinationPath, sourcePath);
             } else {
@@ -242,6 +257,18 @@ public class FileStorageService {
         } else {
             return getFileName(path);
         }
+    }
+
+    private boolean isObjectExists(String bucketName, String path) {
+        if (minioRepository.isObjectExists(bucketName, path)) {
+            return true;
+        }
+
+        if (isFolder(path)) {
+            return minioRepository.isObjectExists(bucketName, path.substring(0, path.length() - 1));
+        }
+
+        return minioRepository.isObjectExists(bucketName, path + "/");
     }
 
     private String getRelativePath(String fullPath, String prefix) {
