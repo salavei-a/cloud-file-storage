@@ -39,47 +39,54 @@ public class FileStorageService {
     private String bucketName;
 
     public void upload(Long userId, MultipartFile file, String path) {
+        String fullPath = getFullPath(userId, path + file.getOriginalFilename());
         try {
-            String fullPath = getFullPath(userId, path + file.getOriginalFilename());
             minioRepository.save(bucketName, fullPath, file.getInputStream(), file.getSize(), file.getContentType());
         } catch (IOException e) {
-            log.error("IOException occurred while uploading file '{}' for user '{}' at path '{}'", file.getOriginalFilename(), userId, path);
+            log.error("IOException occurred while uploading file '{}' for user '{}', bucket '{}', path '{}'",
+                    file.getOriginalFilename(), userId, bucketName, fullPath, e);
             throw new FileStorageException("Unable to upload file: " + file.getOriginalFilename(), e);
         } catch (MinioOperationException e) {
+            log.error("MinIO error while uploading file '{}' for user '{}', bucket '{}', path '{}'",
+                    file.getOriginalFilename(), userId, bucketName, fullPath, e);
             throw new FileStorageException("Unable to upload file: " + file.getOriginalFilename(), e);
         }
     }
 
     public void createFolder(Long userId, String folderName, String path) {
+        String folderPath = getFullPath(userId, path + normalizeObjectName(folderName) + "/");
         try {
-            String folderPath = getFullPath(userId, path + normalizeObjectName(folderName) + "/");
             minioRepository.save(bucketName, folderPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
         } catch (MinioOperationException e) {
+            log.error("MinIO error while creating folder '{}' for user '{}', bucket '{}', path '{}'",
+                    folderName, userId, bucketName, folderPath, e);
             throw new FileStorageException("Unable to create folder: " + folderName, e);
         }
     }
 
     public InputStream downloadFile(Long userId, String path) {
+        String fullPath = getFullPath(userId, path);
         try {
-            return minioRepository.get(bucketName, getFullPath(userId, path));
+            return minioRepository.get(bucketName, fullPath);
         } catch (NoObjectFoundException e) {
-            log.warn("File not found '{}' for user '{}'", path, userId, e);
+            log.warn("File not found '{}' for user '{}', bucket '{}'", fullPath, userId, bucketName, e);
             throw new FileStorageException(
                     String.format("Unable to download file '%s' because it does not exist", getFileName(path)), e
             );
         } catch (MinioOperationException e) {
-            log.error("MinIO error while downloading file for user '{}', path '{}'", userId, path, e);
+            log.error("MinIO error while downloading file for user '{}', bucket '{}', path '{}'",
+                    userId, bucketName, fullPath, e);
             throw new FileStorageException("Unable to download file: " + getFileName(path), e);
         }
     }
 
     public InputStream downloadFolderAsZip(Long userId, String path) {
         String userRoot = getUserRoot(userId);
-        String prefix = getFullPath(userId, path);
+        String fullPath = getFullPath(userId, path);
 
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-            Map<String, InputStream> objects = minioRepository.getAll(bucketName, prefix);
+            Map<String, InputStream> objects = minioRepository.getAll(bucketName, fullPath);
 
             for (Map.Entry<String, InputStream> entry : objects.entrySet()) {
                 try (InputStream inputStream = entry.getValue()) {
@@ -95,15 +102,17 @@ public class FileStorageService {
             zipOutputStream.finish();
             return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
         } catch (NoObjectFoundException e) {
-            log.warn("Folder not found for user '{}', path '{}'", userId, path, e);
+            log.warn("Folder not found for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
             throw new FileStorageException(
                     String.format("Unable to download folder '%s' because it does not exist", getFolderName(path)), e
             );
         } catch (MinioOperationException e) {
-            log.error("MinIO error while downloading folder for user '{}', path '{}'", userId, path, e);
+            log.error("MinIO error while downloading folder for user '{}', bucket '{}', path '{}'",
+                    userId, bucketName, fullPath, e);
             throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
         } catch (IOException e) {
-            log.error("IOException occurred while creating zip for user '{}' at path '{}'", userId, prefix, e);
+            log.error("IOException occurred while creating zip for user '{}', bucket '{}', path '{}'",
+                    userId, bucketName, fullPath, e);
             throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
         }
     }

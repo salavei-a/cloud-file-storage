@@ -44,8 +44,7 @@ public class MinioRepository {
                             .build()
             );
         } catch (Exception e) {
-            log.error("Error saving object '{}' to bucket '{}'", path, bucketName, e);
-            throw new MinioOperationException("Failed to save object: " + path, e);
+            throw new MinioOperationException(String.format("Failed to save object: '%s'", path), e);
         }
     }
 
@@ -59,13 +58,13 @@ public class MinioRepository {
             );
         } catch (ErrorResponseException e) {
             if ("NoSuchKey".equals(e.errorResponse().code())) {
-                throw new NoObjectFoundException("No object found in MinIO: " + path);
+                throw new NoObjectFoundException(String.format("No object found in MinIO: '%s' ", path));
             }
             throw new MinioOperationException(
                     String.format("Failed to retrieve object '%s': %s", path, e.errorResponse().message()), e
             );
         } catch (Exception e) {
-            throw new MinioOperationException("Failed to retrieve object: " + path, e);
+            throw new MinioOperationException(String.format("Failed to retrieve object: '%s'", path), e);
         }
     }
 
@@ -81,14 +80,14 @@ public class MinioRepository {
             }
 
             if (inputStreams.isEmpty()) {
-                throw new NoObjectFoundException("No objects found in MinIO with prefix: " + prefix);
+                throw new NoObjectFoundException(String.format("No objects found in MinIO with prefix: '%s'", prefix));
             }
 
             return inputStreams;
         } catch (NoObjectFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new MinioOperationException("Failed to retrieve objects with prefix: " + prefix, e);
+            throw new MinioOperationException(String.format("Failed to retrieve objects with prefix: '%s'", prefix), e);
         }
     }
 
