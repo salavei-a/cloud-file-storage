@@ -45,7 +45,7 @@ public class MinioRepository {
                             .build()
             );
         } catch (Exception e) {
-            throw new MinioOperationException(String.format("Failed to save object: '%s'", path), e);
+            throw new MinioOperationException("Failed to save object", e);
         }
     }
 
@@ -59,13 +59,11 @@ public class MinioRepository {
             );
         } catch (ErrorResponseException e) {
             if ("NoSuchKey".equals(e.errorResponse().code())) {
-                throw new NoObjectFoundException(String.format("No object found in MinIO: '%s' ", path));
+                throw new NoObjectFoundException("No object found in MinIO");
             }
-            throw new MinioOperationException(
-                    String.format("Failed to retrieve object '%s': %s", path, e.errorResponse().message()), e
-            );
+            throw new MinioOperationException("Failed to retrieve object");
         } catch (Exception e) {
-            throw new MinioOperationException(String.format("Failed to retrieve object: '%s'", path), e);
+            throw new MinioOperationException("Failed to retrieve object");
         }
     }
 
@@ -81,14 +79,14 @@ public class MinioRepository {
             }
 
             if (inputStreams.isEmpty()) {
-                throw new NoObjectFoundException(String.format("No objects found in MinIO with prefix: '%s'", prefix));
+                throw new NoObjectFoundException("No objects found in MinIO");
             }
 
             return inputStreams;
         } catch (NoObjectFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new MinioOperationException(String.format("Failed to retrieve objects with prefix: '%s'", prefix), e);
+            throw new MinioOperationException("Failed to retrieve objects", e);
         }
     }
 
@@ -110,7 +108,7 @@ public class MinioRepository {
 
             return minioObject;
         } catch (Exception e) {
-            throw new MinioOperationException(String.format("Failed to list objects with prefix '%s'", prefix), e);
+            throw new MinioOperationException("Failed to list objects", e);
         }
     }
 
@@ -129,8 +127,7 @@ public class MinioRepository {
                             .build()
             );
         } catch (Exception e) {
-            throw new MinioOperationException(
-                    String.format("Failed to copy object from '%s' to '%s'", sourcePath, destinationPath), e);
+            throw new MinioOperationException("Failed to copy object", e);
         }
     }
 
@@ -146,8 +143,7 @@ public class MinioRepository {
                 copy(bucketName, destinationObjectName, sourceObjectName);
             }
         } catch (Exception e) {
-            throw new MinioOperationException(String.format("Failed to copy objects from '%s' to '%s'",
-                    sourcePrefix, destinationPrefix), e);
+            throw new MinioOperationException("Failed to copy objects", e);
         }
     }
 
@@ -160,7 +156,7 @@ public class MinioRepository {
                             .build()
             );
         } catch (Exception e) {
-            throw new MinioOperationException(String.format("Failed to delete object: '%s'", path), e);
+            throw new MinioOperationException("Failed to delete object", e);
         }
     }
 
@@ -174,7 +170,7 @@ public class MinioRepository {
             }
 
             if (objectsToDelete.isEmpty()) {
-                throw new NoObjectFoundException(String.format("No objects found to delete with prefix: '%s'", prefix));
+                throw new NoObjectFoundException("No objects found to delete in MinIO");
             }
 
             Iterable<Result<DeleteError>> errors = minioClient.removeObjects(
@@ -193,13 +189,13 @@ public class MinioRepository {
             }
 
             if (!errorMessages.isEmpty()) {
-                throw new MinioOperationException(String.format(
-                        "Errors occurred while deleting objects with prefix '%s': %s", prefix, String.join(", ", errorMessages)));
+                throw new MinioOperationException(
+                        String.format("Errors occurred while deleting objects: %s", String.join(", ", errorMessages)));
             }
         } catch (NoObjectFoundException | MinioOperationException e) {
             throw e;
         } catch (Exception e) {
-            throw new MinioOperationException(String.format("Failed to delete objects with prefix: '%s'", prefix), e);
+            throw new MinioOperationException("Failed to delete objects", e);
         }
     }
 
@@ -217,12 +213,9 @@ public class MinioRepository {
             if ("NoSuchKey".equals(e.errorResponse().code())) {
                 return false;
             }
-            throw new MinioOperationException(
-                    String.format("Failed to check existence of object '%s' in bucket '%s'. Error code: %s, Message: %s",
-                            path, bucketName, e.errorResponse().code(), e.errorResponse().message()), e);
+            throw new MinioOperationException("Failed to check existence of object", e);
         } catch (Exception e) {
-            throw new MinioOperationException(
-                    String.format("Failed to check existence of object '%s' in bucket '%s'", path, bucketName), e);
+            throw new MinioOperationException("Failed to check existence of object", e);
         }
     }
 
