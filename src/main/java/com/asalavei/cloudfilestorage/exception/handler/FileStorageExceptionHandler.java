@@ -2,6 +2,7 @@ package com.asalavei.cloudfilestorage.exception.handler;
 
 import com.asalavei.cloudfilestorage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
+import com.asalavei.cloudfilestorage.exception.ObjectExistsException;
 import com.asalavei.cloudfilestorage.util.HttpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +36,16 @@ public class FileStorageExceptionHandler {
     @ExceptionHandler(FileListingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleFileListingException(FileListingException e) {
-        log.warn("FileListingException occurred: {}", e.getMessage());
+        log.error("FileListingException occurred: {}", e.getMessage());
         return ERROR_500_VIEW;
+    }
+
+    @ExceptionHandler(ObjectExistsException.class)
+    public String handleObjectExistsException(ObjectExistsException e, RedirectAttributes redirectAttributes,
+                                              HttpServletRequest request) {
+        log.info("ObjectExistsException occurred: {}", e.getMessage());
+        redirectAttributes.addFlashAttribute("message", e.getMessage());
+        return HttpUtils.redirectToReferer(request);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
