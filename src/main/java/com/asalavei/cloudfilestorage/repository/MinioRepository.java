@@ -12,6 +12,7 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
+import io.minio.StatObjectArgs;
 import io.minio.errors.ErrorResponseException;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
@@ -128,8 +129,8 @@ public class MinioRepository {
                             .build()
             );
         } catch (Exception e) {
-            throw new MinioOperationException(String.format("Failed to copy object from '%s' to '%s'",
-                    sourcePath, destinationPath), e);
+            throw new MinioOperationException(
+                    String.format("Failed to copy object from '%s' to '%s'", sourcePath, destinationPath), e);
         }
     }
 
@@ -199,6 +200,29 @@ public class MinioRepository {
             throw e;
         } catch (Exception e) {
             throw new MinioOperationException(String.format("Failed to delete objects with prefix: '%s'", prefix), e);
+        }
+    }
+
+    public boolean isObjectExists(String bucketName, String path) {
+        try {
+            minioClient.statObject(
+                    StatObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(path)
+                            .build()
+            );
+
+            return true;
+        } catch (ErrorResponseException e) {
+            if ("NoSuchKey".equals(e.errorResponse().code())) {
+                return false;
+            }
+            throw new MinioOperationException(
+                    String.format("Failed to check existence of object '%s' in bucket '%s'. Error code: %s, Message: %s",
+                            path, bucketName, e.errorResponse().code(), e.errorResponse().message()), e);
+        } catch (Exception e) {
+            throw new MinioOperationException(
+                    String.format("Failed to check existence of object '%s' in bucket '%s'", path, bucketName), e);
         }
     }
 
