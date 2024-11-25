@@ -42,14 +42,10 @@ public class FileStorageService {
         String fullPath = getFullPath(userId, path + file.getOriginalFilename());
         try {
             minioRepository.save(bucketName, fullPath, file.getInputStream(), file.getSize(), file.getContentType());
-        } catch (IOException e) {
-            log.error("IOException occurred while uploading file '{}' for user '{}', bucket '{}', path '{}'",
+        } catch (MinioOperationException | IOException e) {
+            log.error("Error while uploading file '{}' for user '{}', bucket '{}', path '{}'",
                     file.getOriginalFilename(), userId, bucketName, fullPath, e);
-            throw new FileStorageException("Unable to upload file: " + file.getOriginalFilename(), e);
-        } catch (MinioOperationException e) {
-            log.error("MinIO error while uploading file '{}' for user '{}', bucket '{}', path '{}'",
-                    file.getOriginalFilename(), userId, bucketName, fullPath, e);
-            throw new FileStorageException("Unable to upload file: " + file.getOriginalFilename(), e);
+            throw new FileStorageException("Unable to upload file: " + file.getOriginalFilename());
         }
     }
 
@@ -58,9 +54,9 @@ public class FileStorageService {
         try {
             minioRepository.save(bucketName, folderPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
         } catch (MinioOperationException e) {
-            log.error("MinIO error while creating folder '{}' for user '{}', bucket '{}', path '{}'",
+            log.error("Error while creating folder '{}' for user '{}', bucket '{}', path '{}'",
                     folderName, userId, bucketName, folderPath, e);
-            throw new FileStorageException("Unable to create folder: " + folderName, e);
+            throw new FileStorageException("Unable to create folder: " + folderName);
         }
     }
 
@@ -71,12 +67,12 @@ public class FileStorageService {
         } catch (NoObjectFoundException e) {
             log.warn("File not found '{}' for user '{}', bucket '{}'", fullPath, userId, bucketName, e);
             throw new FileStorageException(
-                    String.format("Unable to download file '%s' because it does not exist", getFileName(path)), e
+                    String.format("Unable to download file '%s' because it does not exist", getFileName(path))
             );
         } catch (MinioOperationException e) {
-            log.error("MinIO error while downloading file for user '{}', bucket '{}', path '{}'",
+            log.error("Error while downloading file for user '{}', bucket '{}', path '{}'",
                     userId, bucketName, fullPath, e);
-            throw new FileStorageException("Unable to download file: " + getFileName(path), e);
+            throw new FileStorageException("Unable to download file: " + getFileName(path));
         }
     }
 
@@ -104,30 +100,26 @@ public class FileStorageService {
         } catch (NoObjectFoundException e) {
             log.warn("Folder not found for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
             throw new FileStorageException(
-                    String.format("Unable to download folder '%s' because it does not exist", getFolderName(path)), e
+                    String.format("Unable to download folder '%s' because it does not exist", getFolderName(path))
             );
-        } catch (MinioOperationException e) {
-            log.error("MinIO error while downloading folder for user '{}', bucket '{}', path '{}'",
+        } catch (MinioOperationException | IOException e) {
+            log.error("Error while downloading folder as zip for user '{}', bucket '{}', path '{}'",
                     userId, bucketName, fullPath, e);
-            throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
-        } catch (IOException e) {
-            log.error("IOException occurred while creating zip for user '{}', bucket '{}', path '{}'",
-                    userId, bucketName, fullPath, e);
-            throw new FileStorageException("Unable to download folder: " + getFolderName(path), e);
+            throw new FileStorageException("Unable to download folder: " + getFolderName(path));
         }
     }
 
     public List<MinioObjectDTO> list(Long userId, String path) {
-        try {
-            String userRoot = getUserRoot(userId);
-            String targetPath = getFullPath(userId, path);
+        String userRoot = getUserRoot(userId);
+        String fullPath = getFullPath(userId, path);
 
-            List<MinioObjectDTO> minioObjects = minioRepository.list(bucketName, targetPath, false);
+        try {
+            List<MinioObjectDTO> minioObjects = minioRepository.list(bucketName, fullPath, false);
             List<MinioObjectDTO> userObjects = new ArrayList<>();
 
             for (MinioObjectDTO minioObject : minioObjects) {
                 String fullObjectPath = minioObject.getPath();
-                String relativeObjectPath = getRelativePath(fullObjectPath, targetPath);
+                String relativeObjectPath = getRelativePath(fullObjectPath, fullPath);
 
                 if (!relativeObjectPath.isBlank()) {
                     String objectPath = getRelativePath(fullObjectPath, userRoot);
@@ -145,7 +137,8 @@ public class FileStorageService {
 
             return userObjects;
         } catch (MinioOperationException e) {
-            throw new FileListingException("Unable to list files at path:" + path, e);
+            log.error("Error while listing objects for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
+            throw new FileListingException("Unable to list files at path:" + path);
         }
     }
 
@@ -188,39 +181,45 @@ public class FileStorageService {
                     .sorted(Comparator.comparing(object -> object.getName().toLowerCase()))
                     .toList();
         } catch (MinioOperationException e) {
-            log.error("Error searching objects for user '{}' with query '{}' at path '{}'", userId, query, userRootPath, e);
-            throw new FileStorageException("Unable to search with query: " + query, e);
+            log.error("Error while searching objects for user '{}' with query '{}', bucket '{}', path '{}'",
+                    userId, query, bucketName, userRootPath, e);
+            throw new FileStorageException("Unable to search with query: " + query);
         }
     }
 
     public void rename(Long userId, String newName, String path) {
-        try {
-            String oldPath = getFullPath(userId, path);
-            String newPath = getFullPath(userId, buildNewPath(path, normalizeObjectName(newName)));
+        String sourcePath = getFullPath(userId, path);
+        String destinationPath = getFullPath(userId, buildNewPath(path, normalizeObjectName(newName)));
 
+        try {
             if (isFolder(path)) {
-                minioRepository.copyAll(bucketName, newPath, oldPath);
+                minioRepository.copyAll(bucketName, destinationPath, sourcePath);
             } else {
-                minioRepository.copy(bucketName, newPath, oldPath);
+                minioRepository.copy(bucketName, destinationPath, sourcePath);
             }
 
             delete(userId, path);
         } catch (MinioOperationException e) {
-            throw new FileStorageException("Unable to rename: " + getObjectName(path), e);
+            log.error("Error while rename object for user '{}', bucket '{}', from '{}' to '{}'",
+                    userId, bucketName, sourcePath, destinationPath, e);
+            throw new FileStorageException("Unable to rename: " + getObjectName(path));
         }
     }
 
     public void delete(Long userId, String path) {
+        String fullPath = getFullPath(userId, path);
         try {
-            String fullPath = getFullPath(userId, path);
-
             if (isFolder(path)) {
                 minioRepository.deleteAll(bucketName, fullPath);
             } else {
                 minioRepository.delete(bucketName, fullPath);
             }
+        } catch (NoObjectFoundException e) {
+            log.warn("No objects found to delete for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
+            throw new FileStorageException("Unable to delete: " + getObjectName(path));
         } catch (MinioOperationException e) {
-            throw new FileStorageException("Unable to delete: " + getObjectName(path), e);
+            log.error("Error while deleting object '{}' for user '{}' from bucket '{}'", fullPath, userId, bucketName, e);
+            throw new FileStorageException("Unable to delete: " + getObjectName(path));
         }
     }
 

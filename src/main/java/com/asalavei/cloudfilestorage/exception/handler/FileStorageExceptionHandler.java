@@ -27,15 +27,15 @@ public class FileStorageExceptionHandler {
     @ExceptionHandler(FileStorageException.class)
     public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes,
                                              HttpServletRequest request) {
-        log.error("File storage operation failed: {}", e.getMessage(), e);
+        log.warn("FileStorageException occurred: {}", e.getMessage());
         redirectAttributes.addFlashAttribute("message", e.getMessage());
         return HttpUtils.redirectToReferer(request);
     }
 
     @ExceptionHandler(FileListingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleMinioOperationException(FileListingException e) {
-        log.error("Failed to list files in storage due to an unexpected error: {}", e.getMessage(), e);
+    public String handleFileListingException(FileListingException e) {
+        log.warn("FileListingException occurred: {}", e.getMessage());
         return ERROR_500_VIEW;
     }
 

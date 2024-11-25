@@ -91,88 +91,6 @@ public class MinioRepository {
         }
     }
 
-    public void copy(String bucketName, String destinationPath, String sourcePath) {
-        try {
-            CopySource source = CopySource.builder()
-                    .bucket(bucketName)
-                    .object(sourcePath)
-                    .build();
-
-            minioClient.copyObject(
-                    CopyObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(destinationPath)
-                            .source(source)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("Error copying object in bucket '{}' from '{}' to '{}'", bucketName, sourcePath, destinationPath, e);
-            throw new MinioOperationException(String.format("Failed to copy object from: '%s' to: '%s'", sourcePath, destinationPath), e);
-        }
-    }
-
-    public void copyAll(String bucketName, String destinationPrefix, String sourcePrefix) {
-        try {
-            Iterable<Result<Item>> results = listObjects(bucketName, sourcePrefix, true);
-
-            for (Result<Item> result : results) {
-                String sourceObjectName = result.get().objectName();
-                String relativePath = sourceObjectName.substring(sourcePrefix.length());
-                String destinationObjectName = destinationPrefix + relativePath;
-
-                copy(bucketName, destinationObjectName, sourceObjectName);
-            }
-        } catch (Exception e) {
-            log.error("Error copying objects in bucket '{}' from prefix '{}' to prefix '{}'", bucketName, sourcePrefix, destinationPrefix, e);
-            throw new MinioOperationException(String.format("Failed to copy objects from prefix '%s' to prefix '%s'", sourcePrefix, destinationPrefix), e);
-        }
-    }
-
-    public void delete(String bucketName, String path) {
-        try {
-            minioClient.removeObject(
-                    RemoveObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(path)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("Error deleting object '{}' from bucket '{}'", path, bucketName, e);
-            throw new MinioOperationException("Failed to delete object: " + path, e);
-        }
-    }
-
-    public void deleteAll(String bucketName, String prefix) {
-        try {
-            Iterable<Result<Item>> results = listObjects(bucketName, prefix, true);
-            List<DeleteObject> objectsToDelete = new ArrayList<>();
-
-            for (Result<Item> result : results) {
-                objectsToDelete.add(new DeleteObject(result.get().objectName()));
-            }
-
-            if (objectsToDelete.isEmpty()) {
-                log.error("No objects found in bucket '{}' with prefix '{}'", bucketName, prefix);
-                throw new MinioOperationException("No objects found to delete with prefix: " + prefix);
-            }
-
-            Iterable<Result<DeleteError>> errors = minioClient.removeObjects(
-                    RemoveObjectsArgs.builder()
-                            .bucket(bucketName)
-                            .objects(objectsToDelete)
-                            .build()
-            );
-
-            for (Result<DeleteError> error : errors) {
-                DeleteError deleteError = error.get();
-                log.error("Failed to delete object: {} - {}", deleteError.objectName(), deleteError.message());
-            }
-        } catch (Exception e) {
-            log.error("Error deleting objects from bucket '{}' with prefix '{}'", bucketName, prefix, e);
-            throw new MinioOperationException("Failed to delete objects with prefix: " + prefix, e);
-        }
-    }
-
     public List<MinioObjectDTO> list(String bucketName, String prefix, boolean recursive) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, prefix, recursive);
@@ -191,8 +109,96 @@ public class MinioRepository {
 
             return minioObject;
         } catch (Exception e) {
-            log.error("Error listing objects from bucket '{}' with prefix '{}'", bucketName, prefix, e);
             throw new MinioOperationException(String.format("Failed to list objects with prefix '%s'", prefix), e);
+        }
+    }
+
+    public void copy(String bucketName, String destinationPath, String sourcePath) {
+        try {
+            CopySource source = CopySource.builder()
+                    .bucket(bucketName)
+                    .object(sourcePath)
+                    .build();
+
+            minioClient.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(destinationPath)
+                            .source(source)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new MinioOperationException(String.format("Failed to copy object from '%s' to '%s'",
+                    sourcePath, destinationPath), e);
+        }
+    }
+
+    public void copyAll(String bucketName, String destinationPrefix, String sourcePrefix) {
+        try {
+            Iterable<Result<Item>> results = listObjects(bucketName, sourcePrefix, true);
+
+            for (Result<Item> result : results) {
+                String sourceObjectName = result.get().objectName();
+                String relativePath = sourceObjectName.substring(sourcePrefix.length());
+                String destinationObjectName = destinationPrefix + relativePath;
+
+                copy(bucketName, destinationObjectName, sourceObjectName);
+            }
+        } catch (Exception e) {
+            throw new MinioOperationException(String.format("Failed to copy objects from '%s' to '%s'",
+                    sourcePrefix, destinationPrefix), e);
+        }
+    }
+
+    public void delete(String bucketName, String path) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(path)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new MinioOperationException(String.format("Failed to delete object: '%s'", path), e);
+        }
+    }
+
+    public void deleteAll(String bucketName, String prefix) {
+        try {
+            Iterable<Result<Item>> results = listObjects(bucketName, prefix, true);
+            List<DeleteObject> objectsToDelete = new ArrayList<>();
+
+            for (Result<Item> result : results) {
+                objectsToDelete.add(new DeleteObject(result.get().objectName()));
+            }
+
+            if (objectsToDelete.isEmpty()) {
+                throw new NoObjectFoundException(String.format("No objects found to delete with prefix: '%s'", prefix));
+            }
+
+            Iterable<Result<DeleteError>> errors = minioClient.removeObjects(
+                    RemoveObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .objects(objectsToDelete)
+                            .build()
+            );
+
+            List<String> errorMessages = new ArrayList<>();
+
+            for (Result<DeleteError> error : errors) {
+                DeleteError deleteError = error.get();
+                errorMessages.add(String.format("Failed to delete object: '%s' - '%s'",
+                        deleteError.objectName(), deleteError.message()));
+            }
+
+            if (!errorMessages.isEmpty()) {
+                throw new MinioOperationException(String.format(
+                        "Errors occurred while deleting objects with prefix '%s': %s", prefix, String.join(", ", errorMessages)));
+            }
+        } catch (NoObjectFoundException | MinioOperationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new MinioOperationException(String.format("Failed to delete objects with prefix: '%s'", prefix), e);
         }
     }
 
