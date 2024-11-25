@@ -203,7 +203,7 @@ public class FileStorageService {
         String destinationPath = getFullPath(userId, buildNewPath(path, normalizeObjectName(newName)));
 
         try {
-            if (isObjectExists(bucketName, sourcePath)) {
+            if (isObjectExists(bucketName, destinationPath)) {
                 throw new ObjectExistsException("There is already a file or folder with name you specified. Specify a different name");
             }
 
