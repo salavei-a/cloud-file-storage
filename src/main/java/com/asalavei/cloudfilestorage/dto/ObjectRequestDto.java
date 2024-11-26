@@ -1,20 +1,20 @@
 package com.asalavei.cloudfilestorage.dto;
 
-import com.asalavei.cloudfilestorage.validation.ValidPath;
+import com.asalavei.cloudfilestorage.validation.ValidObjectName;
+import com.asalavei.cloudfilestorage.validation.ValidObjectPath;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Value;
 
 @Value
 public class ObjectRequestDto {
 
-    @NotBlank(message = "Name can't be blank")
+    @NotBlank(message = "Name cannot be blank")
     @Size(max = 255, message = "Name must be less than 255 characters")
-    @Pattern(regexp = "^[^/]*$", message = "Name can't contain the '/' character")
+    @ValidObjectName
     String name;
 
-    @NotBlank(message = "Path can't be blank")
-    @ValidPath
+    @NotBlank(message = "Path cannot be blank")
+    @ValidObjectPath
     String path;
 }

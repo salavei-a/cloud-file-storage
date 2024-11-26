@@ -3,7 +3,6 @@ package com.asalavei.cloudfilestorage.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class UsernameValidator implements ConstraintValidator<ValidUsername, String> {
@@ -13,11 +12,6 @@ public class UsernameValidator implements ConstraintValidator<ValidUsername, Str
 
     @Override
     public boolean isValid(final String username, final ConstraintValidatorContext constraintValidatorContext) {
-        return validateUsername(username);
-    }
-
-    private boolean validateUsername(final String username) {
-        Matcher matcher = PATTERN.matcher(username);
-        return matcher.matches();
+        return PATTERN.matcher(username).matches();
     }
 }
