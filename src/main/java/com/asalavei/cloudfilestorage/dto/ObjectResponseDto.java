@@ -7,7 +7,7 @@ import lombok.Value;
 @AllArgsConstructor
 @Builder
 @Value
-public class MinioObjectDTO {
+public class ObjectResponseDto {
     String name;
     String path;
     Boolean isFolder;

@@ -1,6 +1,6 @@
 package com.asalavei.cloudfilestorage.repository;
 
-import com.asalavei.cloudfilestorage.dto.MinioObjectDTO;
+import com.asalavei.cloudfilestorage.dto.MinioObjectDto;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import com.asalavei.cloudfilestorage.exception.NoObjectFoundException;
 import io.minio.CopyObjectArgs;
@@ -92,23 +92,17 @@ public class MinioRepository {
         }
     }
 
-    public List<MinioObjectDTO> list(String bucketName, String prefix, boolean recursive) {
+    public List<MinioObjectDto> list(String bucketName, String prefix, boolean recursive) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, prefix, recursive);
-            List<MinioObjectDTO> minioObject = new ArrayList<>();
+            List<MinioObjectDto> minioObjects = new ArrayList<>();
 
             for (Result<Item> result : results) {
                 Item item = result.get();
-                String objectName = item.objectName();
-
-                minioObject.add(
-                        MinioObjectDTO.builder()
-                                .path(objectName)
-                                .build()
-                );
+                minioObjects.add(new MinioObjectDto(item.objectName()));
             }
 
-            return minioObject;
+            return minioObjects;
         } catch (Exception e) {
             throw new MinioOperationException("Failed to list objects", e);
         }

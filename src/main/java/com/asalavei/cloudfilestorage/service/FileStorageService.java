@@ -1,6 +1,7 @@
 package com.asalavei.cloudfilestorage.service;
 
-import com.asalavei.cloudfilestorage.dto.MinioObjectDTO;
+import com.asalavei.cloudfilestorage.dto.MinioObjectDto;
+import com.asalavei.cloudfilestorage.dto.ObjectResponseDto;
 import com.asalavei.cloudfilestorage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
@@ -120,22 +121,22 @@ public class FileStorageService {
         }
     }
 
-    public List<MinioObjectDTO> list(Long userId, String path) {
+    public List<ObjectResponseDto> list(Long userId, String path) {
         String userRoot = getUserRoot(userId);
         String fullPath = getFullPath(userId, path);
 
         try {
-            List<MinioObjectDTO> minioObjects = minioRepository.list(bucketName, fullPath, false);
-            List<MinioObjectDTO> userObjects = new ArrayList<>();
+            List<MinioObjectDto> minioObjects = minioRepository.list(bucketName, fullPath, false);
+            List<ObjectResponseDto> userObjects = new ArrayList<>();
 
-            for (MinioObjectDTO minioObject : minioObjects) {
-                String fullObjectPath = minioObject.getPath();
+            for (MinioObjectDto minioObject : minioObjects) {
+                String fullObjectPath = minioObject.name();
                 String relativeObjectPath = getRelativePath(fullObjectPath, fullPath);
 
                 if (!relativeObjectPath.isBlank()) {
                     String objectPath = getRelativePath(fullObjectPath, userRoot);
 
-                    userObjects.add(MinioObjectDTO.builder()
+                    userObjects.add(ObjectResponseDto.builder()
                             .name(getObjectName(relativeObjectPath))
                             .path(objectPath)
                             .isFolder(isFolder(objectPath))
@@ -162,21 +163,21 @@ public class FileStorageService {
      *
      * @param userId the ID of the user whose files and folders are being searched
      * @param query  the search query to filter objects by name (case-insensitive)
-     * @return a list of {@link MinioObjectDTO} representing the found objects, each containing the object's name and path
+     * @return a list of {@link ObjectResponseDto} representing the found objects, each containing the object's name and path
      */
-    public List<MinioObjectDTO> search(Long userId, String query) {
+    public List<ObjectResponseDto> search(Long userId, String query) {
         String userRoot = getUserRoot(userId);
         String userRootPath = getFullPath(userId, "/");
 
         try {
-            List<MinioObjectDTO> minioObjects = minioRepository.list(bucketName, userRootPath, true);
-            Set<MinioObjectDTO> userObjects = new HashSet<>();
+            List<MinioObjectDto> minioObjects = minioRepository.list(bucketName, userRootPath, true);
+            Set<ObjectResponseDto> userObjects = new HashSet<>();
 
-            for (MinioObjectDTO minioObject : minioObjects) {
-                String objectPath = getRelativePath(minioObject.getPath(), userRoot);
+            for (MinioObjectDto minioObject : minioObjects) {
+                String objectPath = getRelativePath(minioObject.name(), userRoot);
 
                 if (!isFolder(objectPath)) {
-                    userObjects.add(MinioObjectDTO.builder()
+                    userObjects.add(ObjectResponseDto.builder()
                             .name(getFileName(objectPath))
                             .path(getParentFolderPath(objectPath))
                             .isFolder(false)
@@ -284,14 +285,14 @@ public class FileStorageService {
         return path.substring(0, path.lastIndexOf("/") + 1);
     }
 
-    private List<MinioObjectDTO> getParentFolders(String path) {
-        List<MinioObjectDTO> parentFolders = new ArrayList<>();
+    private List<ObjectResponseDto> getParentFolders(String path) {
+        List<ObjectResponseDto> parentFolders = new ArrayList<>();
         StringBuilder currentPath = new StringBuilder("/");
 
         for (String part : path.split("/")) {
             if (!part.isEmpty() && path.contains(part + "/")) {
                 currentPath.append(part).append("/");
-                parentFolders.add(MinioObjectDTO.builder()
+                parentFolders.add(ObjectResponseDto.builder()
                         .name(part)
                         .path(currentPath.toString())
                         .isFolder(true)
@@ -316,7 +317,7 @@ public class FileStorageService {
         return path.endsWith("/");
     }
 
-    private void sortObjects(List<MinioObjectDTO> userObjects) {
+    private void sortObjects(List<ObjectResponseDto> userObjects) {
         userObjects.sort((o1, o2) -> {
             boolean isFolder1 = isFolder(o1.getPath());
             boolean isFolder2 = isFolder(o2.getPath());
