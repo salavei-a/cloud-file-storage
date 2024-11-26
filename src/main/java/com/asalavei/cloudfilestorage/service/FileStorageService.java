@@ -57,7 +57,7 @@ public class FileStorageService {
     }
 
     public void createFolder(Long userId, String folderName, String path) {
-        String folderFullPath = getFullPath(userId, path + normalizeObjectName(folderName) + "/");
+        String folderFullPath = getFullPath(userId, path + folderName + "/");
         try {
             if (isObjectExists(bucketName, folderFullPath)) {
                 throw new ObjectExistsException("There is already a file or folder with folder name you created");
@@ -200,7 +200,7 @@ public class FileStorageService {
 
     public void rename(Long userId, String newName, String path) {
         String sourcePath = getFullPath(userId, path);
-        String destinationPath = getFullPath(userId, buildNewPath(path, normalizeObjectName(newName)));
+        String destinationPath = getFullPath(userId, buildNewPath(path, newName));
 
         try {
             if (isObjectExists(bucketName, destinationPath)) {
@@ -274,10 +274,6 @@ public class FileStorageService {
 
     private String getUserRoot(Long userId) {
         return String.format("user-%s-files", userId);
-    }
-
-    private String normalizeObjectName(String objectName) {
-        return objectName.replace("/", "");
     }
 
     private String getFullPath(Long userId, String path) {
