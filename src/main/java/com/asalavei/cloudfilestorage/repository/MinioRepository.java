@@ -169,10 +169,6 @@ public class MinioRepository {
                 objectsToDelete.add(new DeleteObject(result.get().objectName()));
             }
 
-            if (objectsToDelete.isEmpty()) {
-                throw new NoObjectFoundException("No objects found to delete in MinIO");
-            }
-
             Iterable<Result<DeleteError>> errors = minioClient.removeObjects(
                     RemoveObjectsArgs.builder()
                             .bucket(bucketName)
