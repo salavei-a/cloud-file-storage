@@ -16,7 +16,7 @@
             <div class="card mb-4 h-100">
                 <div class="card-body">
                     <form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data">
-                        <input type="hidden" name="path" th:value="${param.path}" />
+                        <input type="hidden" name="path" th:value="${#strings.isEmpty(param.path) ? '/' : param.path}" />
                         <div class="mb-3">
                             <input class="form-control" type="file" id="file" name="files" multiple required />
                         </div>
@@ -29,7 +29,7 @@
             <div class="card mb-4 h-100">
                 <div class="card-body">
                     <form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data">
-                        <input type="hidden" name="path" th:value="${param.path}" />
+                        <input type="hidden" name="path" th:value="${#strings.isEmpty(param.path) ? '/' : param.path}" />
                         <div class="mb-3">
                             <input class="form-control" type="file" id="folder" name="files" webkitdirectory multiple required />
                         </div>
@@ -42,9 +42,9 @@
             <div class="card mb-4 h-100">
                 <div class="card-body">
                     <form id="newFolderForm" method="post" action="/storage/folders">
-                        <input type="hidden" name="path" th:value="${param.path}" />
+                        <input type="hidden" name="path" th:value="${#strings.isEmpty(param.path) ? '/' : param.path}" />
                         <div class="mb-3">
-                            <input type="text" class="form-control" id="folderName" name="folderName" placeholder="Folder name" required />
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Folder name" required />
                         </div>
                         <button type="submit" class="btn btn-success w-100">Create Folder</button>
                     </form>
@@ -158,7 +158,7 @@
 
             const newNameInput = document.createElement('input');
             newNameInput.type = 'hidden';
-            newNameInput.name = 'newName';
+            newNameInput.name = 'name';
             newNameInput.value = newName;
             form.appendChild(newNameInput);
 
