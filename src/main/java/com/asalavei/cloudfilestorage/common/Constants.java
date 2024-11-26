@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 public class Constants {
 
     public static final String USER_ATTRIBUTE = "user";
+    public static final String MESSAGE_ATTRIBUTE = "message";
     public static final String ERROR_MESSAGE_ATTRIBUTE = "errorMessage";
 
     public static final String REDIRECT_HOME = "redirect:/";

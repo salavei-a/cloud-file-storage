@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import static com.asalavei.cloudfilestorage.common.Constants.ERROR_500_VIEW;
+import static com.asalavei.cloudfilestorage.common.Constants.MESSAGE_ATTRIBUTE;
 
 @Slf4j
 @ControllerAdvice
@@ -29,7 +30,7 @@ public class FileStorageExceptionHandler {
     public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes,
                                              HttpServletRequest request) {
         log.warn("FileStorageException occurred: {}", e.getMessage());
-        redirectAttributes.addFlashAttribute("message", e.getMessage());
+        redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, e.getMessage());
         return HttpUtils.redirectToReferer(request);
     }
 
@@ -44,13 +45,13 @@ public class FileStorageExceptionHandler {
     public String handleObjectExistsException(ObjectExistsException e, RedirectAttributes redirectAttributes,
                                               HttpServletRequest request) {
         log.info("ObjectExistsException occurred: {}", e.getMessage());
-        redirectAttributes.addFlashAttribute("message", e.getMessage());
+        redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, e.getMessage());
         return HttpUtils.redirectToReferer(request);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public String handleMaxUploadSizeExceededException(RedirectAttributes redirectAttributes, HttpServletRequest request) {
-        redirectAttributes.addFlashAttribute("message", "The uploaded file is too large. Maximum allowed size is " + maxFileSize);
+        redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, "The uploaded file is too large. Maximum allowed size is " + maxFileSize);
         return HttpUtils.redirectToReferer(request);
     }
 }
