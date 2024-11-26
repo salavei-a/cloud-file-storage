@@ -13,7 +13,7 @@ public class HttpUtils {
         return "redirect:" + HttpUtils.getReferer(request);
     }
 
-    public static String getReferer(HttpServletRequest request) {
+    private static String getReferer(HttpServletRequest request) {
         String referer = request.getHeader("Referer");
 
         if (referer == null || referer.isBlank()) {
