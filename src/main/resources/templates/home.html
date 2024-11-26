@@ -85,7 +85,9 @@
                        th:href="@{/storage/download (path=${object.getPath()})}" class="btn btn-sm btn-outline-primary me-2">Download</a>
                     <!-- Rename Button -->
                     <button type="button" class="btn btn-sm btn-outline-secondary me-2"
-                            th:attr="onclick=|openRenameModal('${object.getPath()}')|">Rename</button>
+                            th:data-path="${object.getPath()}"
+                            th:data-name="${object.getName()}"
+                            onclick="openRenameModal(this)">Rename</button>
                     <!-- Delete Button -->
                     <form th:action="@{/storage (path=${object.getPath()})}" method="post" class="d-inline">
                         <input type="hidden" name="_method" value="delete"/>
@@ -122,8 +124,11 @@
 <script>
     let currentPath = '';
 
-    function openRenameModal(path) {
-        currentPath = path;
+    function openRenameModal(button) {
+        currentPath = button.getAttribute('data-path');
+        const currentName = button.getAttribute('data-name');
+        const newNameInput = document.getElementById('newNameInput');
+        newNameInput.value = currentName;
         $('#renameModal').modal('show');
     }
 
