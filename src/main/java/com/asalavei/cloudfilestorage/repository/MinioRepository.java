@@ -61,7 +61,9 @@ public class MinioRepository {
             if ("NoSuchKey".equals(e.errorResponse().code())) {
                 throw new NoObjectFoundException("No object found in MinIO");
             }
-            throw new MinioOperationException("Failed to retrieve object");
+            throw new MinioOperationException(
+                    String.format("Failed to retrieve object '%s'. Error code: %s, Message: %s",
+                            path, e.errorResponse().code(), e.errorResponse().message()), e);
         } catch (Exception e) {
             throw new MinioOperationException("Failed to retrieve object");
         }
@@ -209,7 +211,9 @@ public class MinioRepository {
             if ("NoSuchKey".equals(e.errorResponse().code())) {
                 return false;
             }
-            throw new MinioOperationException("Failed to check existence of object", e);
+            throw new MinioOperationException(
+                    String.format("Failed to check existence of object '%s'. Error code: %s, Message: %s",
+                            path, e.errorResponse().code(), e.errorResponse().message()), e);
         } catch (Exception e) {
             throw new MinioOperationException("Failed to check existence of object", e);
         }
