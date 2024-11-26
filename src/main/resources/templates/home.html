@@ -123,10 +123,11 @@
 
 <script>
     let currentPath = '';
+    let currentName = '';
 
     function openRenameModal(button) {
         currentPath = button.getAttribute('data-path');
-        const currentName = button.getAttribute('data-name');
+        currentName = button.getAttribute('data-name');
         const newNameInput = document.getElementById('newNameInput');
         newNameInput.value = currentName;
         $('#renameModal').modal('show');
@@ -135,38 +136,45 @@
     function closeRenameModal() {
         $('#renameModal').modal('hide');
         currentPath = '';
+        currentName = '';
     }
 
     function submitRenameForm() {
         const newName = document.getElementById('newNameInput').value;
-        if (newName) {
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.action = `/storage`;
-
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'patch';
-            form.appendChild(methodInput);
-
-            const pathInput = document.createElement('input');
-            pathInput.type = 'hidden';
-            pathInput.name = 'path';
-            pathInput.value = `${currentPath}`;
-            form.appendChild(pathInput);
-
-            const newNameInput = document.createElement('input');
-            newNameInput.type = 'hidden';
-            newNameInput.name = 'name';
-            newNameInput.value = newName;
-            form.appendChild(newNameInput);
-
-            document.body.appendChild(form);
-            form.submit();
-        } else {
+        if(!newName) {
             alert('Please enter a new name.');
+            return;
         }
+
+        if (newName === currentName) {
+            closeRenameModal();
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = `/storage`;
+
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'patch';
+        form.appendChild(methodInput);
+
+        const pathInput = document.createElement('input');
+        pathInput.type = 'hidden';
+        pathInput.name = 'path';
+        pathInput.value = `${currentPath}`;
+        form.appendChild(pathInput);
+
+        const newNameInput = document.createElement('input');
+        newNameInput.type = 'hidden';
+        newNameInput.name = 'name';
+        newNameInput.value = newName;
+        form.appendChild(newNameInput);
+
+        document.body.appendChild(form);
+        form.submit();
     }
 </script>
 
