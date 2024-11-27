@@ -213,6 +213,26 @@ public class MinioRepository {
         }
     }
 
+    public boolean isFolderExists(String bucketName, String path) {
+        try {
+            if (!path.endsWith("/")) {
+                path += "/";
+            }
+
+            Iterable<Result<Item>> results = minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(path)
+                            .maxKeys(1)
+                            .build()
+            );
+
+            return results.iterator().hasNext();
+        } catch (Exception e) {
+            throw new MinioOperationException("Failed to check existence of folder", e);
+        }
+    }
+
     private Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive) {
         return minioClient.listObjects(
                 ListObjectsArgs.builder()
