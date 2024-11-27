@@ -2,7 +2,7 @@ package com.asalavei.cloudfilestorage.repository;
 
 import com.asalavei.cloudfilestorage.dto.MinioObjectDto;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
-import com.asalavei.cloudfilestorage.exception.NoObjectFoundException;
+import com.asalavei.cloudfilestorage.exception.ObjectNotFoundException;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
 import io.minio.GetObjectArgs;
@@ -59,7 +59,7 @@ public class MinioRepository {
             );
         } catch (ErrorResponseException e) {
             if ("NoSuchKey".equals(e.errorResponse().code())) {
-                throw new NoObjectFoundException("No object found in MinIO");
+                throw new ObjectNotFoundException("No object found in MinIO");
             }
             throw new MinioOperationException(
                     String.format("Failed to retrieve object '%s'. Error code: %s, Message: %s",
@@ -81,11 +81,11 @@ public class MinioRepository {
             }
 
             if (inputStreams.isEmpty()) {
-                throw new NoObjectFoundException("No objects found in MinIO");
+                throw new ObjectNotFoundException("No objects found in MinIO");
             }
 
             return inputStreams;
-        } catch (NoObjectFoundException e) {
+        } catch (ObjectNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new MinioOperationException("Failed to retrieve objects", e);
@@ -184,7 +184,7 @@ public class MinioRepository {
                 throw new MinioOperationException(
                         String.format("Errors occurred while deleting objects: %s", String.join(", ", errorMessages)));
             }
-        } catch (NoObjectFoundException | MinioOperationException e) {
+        } catch (ObjectNotFoundException | MinioOperationException e) {
             throw e;
         } catch (Exception e) {
             throw new MinioOperationException("Failed to delete objects", e);
