@@ -1,0 +1,31 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+minio:
+  access:
+    name: ${MINIO_ROOT_USER}
+    secret: ${MINIO_ROOT_PASSWORD}
+  bucket:
+    name: ${MINIO_BUCKET}
+  url: http://${MINIO_HOST}:${MINIO_PORT}
+
+server:
+  tomcat:
+    max-swallow-size: -1
