@@ -2,6 +2,7 @@ package com.asalavei.cloudfilestorage.exception.handler;
 
 import com.asalavei.cloudfilestorage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
+import com.asalavei.cloudfilestorage.exception.ObjectNotFoundException;
 import com.asalavei.cloudfilestorage.exception.ObjectExistsException;
 import com.asalavei.cloudfilestorage.util.HttpUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import static com.asalavei.cloudfilestorage.common.Constants.ERROR_404_VIEW;
 import static com.asalavei.cloudfilestorage.common.Constants.ERROR_500_VIEW;
 import static com.asalavei.cloudfilestorage.common.Constants.MESSAGE_ATTRIBUTE;
 
@@ -39,6 +41,12 @@ public class FileStorageExceptionHandler {
     public String handleFileListingException(FileListingException e) {
         log.error("FileListingException occurred: {}", e.getMessage());
         return ERROR_500_VIEW;
+    }
+
+    @ExceptionHandler(ObjectNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleNoObjectFoundException() {
+        return ERROR_404_VIEW;
     }
 
     @ExceptionHandler(ObjectExistsException.class)
