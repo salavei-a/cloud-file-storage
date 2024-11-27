@@ -5,7 +5,7 @@ import com.asalavei.cloudfilestorage.dto.ObjectResponseDto;
 import com.asalavei.cloudfilestorage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
-import com.asalavei.cloudfilestorage.exception.NoObjectFoundException;
+import com.asalavei.cloudfilestorage.exception.ObjectNotFoundException;
 import com.asalavei.cloudfilestorage.exception.ObjectExistsException;
 import com.asalavei.cloudfilestorage.repository.MinioRepository;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +76,7 @@ public class FileStorageService {
         String fullPath = getFullPath(userId, path);
         try {
             return minioRepository.get(bucketName, fullPath);
-        } catch (NoObjectFoundException e) {
+        } catch (ObjectNotFoundException e) {
             log.warn("File not found '{}' for user '{}', bucket '{}'", fullPath, userId, bucketName, e);
             throw new FileStorageException(
                     String.format("Unable to download file '%s' because it does not exist", getFileName(path))
@@ -109,7 +109,7 @@ public class FileStorageService {
 
             zipOutputStream.finish();
             return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-        } catch (NoObjectFoundException e) {
+        } catch (ObjectNotFoundException e) {
             log.warn("Folder not found for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
             throw new FileStorageException(
                     String.format("Unable to download folder '%s' because it does not exist", getFolderName(path))
@@ -126,6 +126,11 @@ public class FileStorageService {
         String fullPath = getFullPath(userId, path);
 
         try {
+            if (!"/".equals(path) && !minioRepository.isFolderExists(bucketName, fullPath)) {
+                log.warn("Folder not found for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath);
+                throw new ObjectNotFoundException("Folder does not exist");
+            }
+
             List<MinioObjectDto> minioObjects = minioRepository.list(bucketName, fullPath, false);
             List<ObjectResponseDto> userObjects = new ArrayList<>();
 
@@ -262,11 +267,7 @@ public class FileStorageService {
             return true;
         }
 
-        if (isFolder(path)) {
-            return minioRepository.isObjectExists(bucketName, path.substring(0, path.length() - 1));
-        }
-
-        return minioRepository.isObjectExists(bucketName, path + "/");
+        return minioRepository.isFolderExists(bucketName, path);
     }
 
     private String getRelativePath(String fullPath, String prefix) {
