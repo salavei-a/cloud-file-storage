@@ -214,16 +214,19 @@
     }
 
     function validateFileSize(input) {
-        const maxSize = 5 * 1024 * 1024;
+        const maxTotalSize = 5 * 1024 * 1024;
         const files = input.files;
+        let totalSize = 0;
 
         for (let i = 0; i < files.length; i++) {
-            if (files[i].size > maxSize) {
-                configureToastr();
-                toastr.info("The uploaded file is too large. Maximum allowed size is 5MB");
-                input.value = '';
-                return false;
-            }
+            totalSize += files[i].size;
+        }
+
+        if (totalSize > maxTotalSize) {
+            configureToastr();
+            toastr.info("The uploaded file is too large. Maximum allowed size is 5MB");
+            input.value = '';
+            return false;
         }
         return true;
     }
