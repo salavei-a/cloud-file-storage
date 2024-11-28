@@ -9,7 +9,6 @@ import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
 import io.minio.StatObjectArgs;
@@ -108,61 +107,49 @@ public class MinioRepository {
         }
     }
 
-    public void copy(String bucketName, String destinationPath, String sourcePath) {
-        try {
-            CopySource source = CopySource.builder()
-                    .bucket(bucketName)
-                    .object(sourcePath)
-                    .build();
-
-            minioClient.copyObject(
-                    CopyObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(destinationPath)
-                            .source(source)
-                            .build()
-            );
-        } catch (Exception e) {
-            throw new MinioOperationException("Failed to copy object", e);
-        }
-    }
-
-    public void copyAll(String bucketName, String destinationPrefix, String sourcePrefix) {
+    public void copy(String bucketName, String destinationPrefix, String sourcePrefix) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, sourcePrefix, true);
+
+            if (!results.iterator().hasNext()) {
+                throw new ObjectNotFoundException("No objects found to copy");
+            }
 
             for (Result<Item> result : results) {
                 String sourceObjectName = result.get().objectName();
                 String relativePath = sourceObjectName.substring(sourcePrefix.length());
                 String destinationObjectName = destinationPrefix + relativePath;
 
-                copy(bucketName, destinationObjectName, sourceObjectName);
+                CopySource source = CopySource.builder()
+                        .bucket(bucketName)
+                        .object(sourceObjectName)
+                        .build();
+
+                minioClient.copyObject(
+                        CopyObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(destinationObjectName)
+                                .source(source)
+                                .build());
             }
+        } catch (ObjectNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             throw new MinioOperationException("Failed to copy objects", e);
         }
     }
 
-    public void delete(String bucketName, String path) {
-        try {
-            minioClient.removeObject(
-                    RemoveObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(path)
-                            .build()
-            );
-        } catch (Exception e) {
-            throw new MinioOperationException("Failed to delete object", e);
-        }
-    }
-
-    public void deleteAll(String bucketName, String prefix) {
+    public void delete(String bucketName, String prefix) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, prefix, true);
             List<DeleteObject> objectsToDelete = new ArrayList<>();
 
             for (Result<Item> result : results) {
                 objectsToDelete.add(new DeleteObject(result.get().objectName()));
+            }
+
+            if (objectsToDelete.isEmpty()) {
+                throw new ObjectNotFoundException("No objects found to delete");
             }
 
             Iterable<Result<DeleteError>> errors = minioClient.removeObjects(
@@ -193,6 +180,18 @@ public class MinioRepository {
 
     public boolean isObjectExists(String bucketName, String path) {
         try {
+            if (path.endsWith("/")) {
+                Iterable<Result<Item>> results = minioClient.listObjects(
+                        ListObjectsArgs.builder()
+                                .bucket(bucketName)
+                                .prefix(path)
+                                .maxKeys(1)
+                                .build()
+                );
+
+                return results.iterator().hasNext();
+            }
+
             minioClient.statObject(
                     StatObjectArgs.builder()
                             .bucket(bucketName)
@@ -210,26 +209,6 @@ public class MinioRepository {
                             path, e.errorResponse().code(), e.errorResponse().message()), e);
         } catch (Exception e) {
             throw new MinioOperationException("Failed to check existence of object", e);
-        }
-    }
-
-    public boolean isFolderExists(String bucketName, String path) {
-        try {
-            if (!path.endsWith("/")) {
-                path += "/";
-            }
-
-            Iterable<Result<Item>> results = minioClient.listObjects(
-                    ListObjectsArgs.builder()
-                            .bucket(bucketName)
-                            .prefix(path)
-                            .maxKeys(1)
-                            .build()
-            );
-
-            return results.iterator().hasNext();
-        } catch (Exception e) {
-            throw new MinioOperationException("Failed to check existence of folder", e);
         }
     }
 

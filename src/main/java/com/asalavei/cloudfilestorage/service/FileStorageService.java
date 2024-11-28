@@ -133,7 +133,7 @@ public class FileStorageService {
                 throw new ObjectNotFoundException("Provided path is not a folder");
             }
 
-            if (isUserFolderExists(path, fullPath)) {
+            if (!isFolderExists(path, fullPath)) {
                 log.warn("Failed to list objects for user '{}': folder does not exist bucket '{}', path '{}'", userId, bucketName, fullPath);
                 throw new ObjectNotFoundException("Folder does not exist");
             }
@@ -216,17 +216,19 @@ public class FileStorageService {
         String destinationPath = getFullPath(userId, buildNewPath(path, newName));
 
         try {
+            if (!isObjectExists(bucketName, sourcePath)) {
+                throw new ObjectNotFoundException("No objects found to rename");
+            }
+
             if (isObjectExists(bucketName, destinationPath)) {
                 throw new ObjectExistsException("There is already a file or folder with name you specified. Specify a different name");
             }
 
-            if (isFolder(path)) {
-                minioRepository.copyAll(bucketName, destinationPath, sourcePath);
-            } else {
-                minioRepository.copy(bucketName, destinationPath, sourcePath);
-            }
-
-            delete(userId, path);
+            minioRepository.copy(bucketName, destinationPath, sourcePath);
+            minioRepository.delete(bucketName, sourcePath);
+        } catch (ObjectNotFoundException e) {
+            log.warn("No object found to rename for user '{}', bucket '{}', from '{}' to '{}'", userId, bucketName, sourcePath, destinationPath, e);
+            throw new FileStorageException(String.format("Unable to rename '%s' because it does not exist", getObjectName(path)));
         } catch (MinioOperationException e) {
             log.error("Error while rename object for user '{}', bucket '{}', from '{}' to '{}'",
                     userId, bucketName, sourcePath, destinationPath, e);
@@ -238,11 +240,9 @@ public class FileStorageService {
         String fullPath = getFullPath(userId, path);
 
         try {
-            if (isFolder(path)) {
-                minioRepository.deleteAll(bucketName, fullPath);
-            } else {
-                minioRepository.delete(bucketName, fullPath);
-            }
+            minioRepository.delete(bucketName, fullPath);
+        } catch (ObjectNotFoundException e) {
+            log.warn("No objects found to delete for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
         } catch (MinioOperationException e) {
             log.error("Error while deleting object '{}' for user '{}' from bucket '{}'", fullPath, userId, bucketName, e);
             throw new FileStorageException("Unable to delete: " + getObjectName(path));
@@ -275,11 +275,19 @@ public class FileStorageService {
             return true;
         }
 
-        return minioRepository.isFolderExists(bucketName, path);
+        if (isFolder(path)) {
+            return minioRepository.isObjectExists(bucketName, path.substring(0, path.length() - 1));
+        }
+
+        return minioRepository.isObjectExists(bucketName, path + "/");
     }
 
-    private boolean isUserFolderExists(String path, String fullPath) {
-        return !"/".equals(path) && !minioRepository.isFolderExists(bucketName, fullPath);
+    private boolean isFolderExists(String path, String fullPath) {
+        if ("/".equals(path)) {
+            return true;
+        }
+
+        return minioRepository.isObjectExists(bucketName, fullPath);
     }
 
     private String getRelativePath(String fullPath, String prefix) {
