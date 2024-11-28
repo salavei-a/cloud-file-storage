@@ -129,12 +129,12 @@ public class FileStorageService {
 
         try {
             if (!isFolder(path)) {
-                log.warn("Path is not a folder for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath);
+                log.warn("Failed to list objects for user '{}': provided path '{}' is not a folder", userId, path);
                 throw new ObjectNotFoundException("Provided path is not a folder");
             }
 
-            if (!"/".equals(path) && !minioRepository.isFolderExists(bucketName, fullPath)) {
-                log.warn("Folder not found to list for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath);
+            if (isUserFolderExists(path, fullPath)) {
+                log.warn("Failed to list objects for user '{}': folder does not exist bucket '{}', path '{}'", userId, bucketName, fullPath);
                 throw new ObjectNotFoundException("Folder does not exist");
             }
 
@@ -276,6 +276,10 @@ public class FileStorageService {
         }
 
         return minioRepository.isFolderExists(bucketName, path);
+    }
+
+    private boolean isUserFolderExists(String path, String fullPath) {
+        return !"/".equals(path) && !minioRepository.isFolderExists(bucketName, fullPath);
     }
 
     private String getRelativePath(String fullPath, String prefix) {
