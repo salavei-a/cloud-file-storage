@@ -7,15 +7,19 @@ import lombok.NoArgsConstructor;
 public class Constants {
 
     public static final String USER_ATTRIBUTE = "user";
+    public static final String OBJECTS_ATTRIBUTE = "objects";
+    public static final String BREADCRUMBS_ATTRIBUTE = "breadcrumbs";
     public static final String MESSAGE_ATTRIBUTE = "message";
     public static final String ERROR_MESSAGE_ATTRIBUTE = "errorMessage";
 
-    public static final String REDIRECT_HOME = "redirect:/";
-    public static final String REDIRECT_SIGNIN = "redirect:/auth/signin";
-
     public static final String HOME_URL = "/";
     public static final String SIGNIN_URL = "/auth/signin";
-    public static final String SIGNUP_URL = "/auth/signup";
+    public static final String SIGNOUT_URL = "/auth/signout";
+    public static final String PROCESS_SIGNIN_URL = "/auth/process-signin";
+
+    public static final String REDIRECT_HOME = "redirect:" + HOME_URL;
+    public static final String REDIRECT_SIGNIN = "redirect:" + SIGNIN_URL;
+    public static final String FORWARD_PROCESS_SIGNIN = "forward:" + PROCESS_SIGNIN_URL;
 
     public static final String SIGNIN_VIEW = "auth/signin";
     public static final String SIGNUP_VIEW = "auth/signup";

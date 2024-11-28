@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static com.asalavei.cloudfilestorage.common.Constants.MESSAGE_ATTRIBUTE;
+import static com.asalavei.cloudfilestorage.common.Constants.OBJECTS_ATTRIBUTE;
 import static com.asalavei.cloudfilestorage.common.Constants.SEARCH_VIEW;
 
 @Controller
@@ -67,7 +68,7 @@ public class FileStorageController {
 
     @GetMapping("/search")
     public String search(@RequestParam("query") String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
-        model.addAttribute("objects", fileStorageService.search(userPrincipal.getId(), query));
+        model.addAttribute(OBJECTS_ATTRIBUTE, fileStorageService.search(userPrincipal.getId(), query));
         return SEARCH_VIEW;
     }
 

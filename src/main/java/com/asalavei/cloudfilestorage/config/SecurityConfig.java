@@ -13,6 +13,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.asalavei.cloudfilestorage.common.Constants.HOME_URL;
+import static com.asalavei.cloudfilestorage.common.Constants.PROCESS_SIGNIN_URL;
+import static com.asalavei.cloudfilestorage.common.Constants.SIGNIN_URL;
+import static com.asalavei.cloudfilestorage.common.Constants.SIGNOUT_URL;
+
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
@@ -29,17 +34,17 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/storage/**").authenticated()
+                        .requestMatchers(HOME_URL, "/storage/**").authenticated()
                         .anyRequest().permitAll())
                 .formLogin(form -> form
-                        .loginPage("/auth/signin")
-                        .loginProcessingUrl("/auth/process-signin")
+                        .loginPage(SIGNIN_URL)
+                        .loginProcessingUrl(PROCESS_SIGNIN_URL)
                         .failureHandler(customAuthenticationFailureHandler)
-                        .defaultSuccessUrl("/", false))
+                        .defaultSuccessUrl(HOME_URL, false))
                 .logout(logout -> logout
-                        .logoutUrl("/auth/signout")
+                        .logoutUrl(SIGNOUT_URL)
                         .deleteCookies("JSESSIONID")
-                        .logoutSuccessUrl("/auth/signin"));
+                        .logoutSuccessUrl(SIGNIN_URL));
         return http.build();
     }
 

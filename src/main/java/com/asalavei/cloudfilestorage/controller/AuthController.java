@@ -38,7 +38,7 @@ public class AuthController {
             return SIGNIN_VIEW;
         }
 
-        return "forward:/auth/process-signin";
+        return FORWARD_PROCESS_SIGNIN;
     }
 
     @GetMapping("/signup")

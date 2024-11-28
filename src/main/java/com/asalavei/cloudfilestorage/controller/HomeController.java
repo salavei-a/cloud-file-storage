@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import static com.asalavei.cloudfilestorage.common.Constants.BREADCRUMBS_ATTRIBUTE;
 import static com.asalavei.cloudfilestorage.common.Constants.HOME_VIEW;
+import static com.asalavei.cloudfilestorage.common.Constants.OBJECTS_ATTRIBUTE;
 
 @Controller
 @RequiredArgsConstructor
@@ -26,8 +28,8 @@ public class HomeController {
     @GetMapping
     public String homePage(@RequestParam(value = "path", defaultValue = "/") @ValidObjectPath String path, Model model,
                            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        model.addAttribute("breadcrumbs", BreadcrumbsUtil.buildBreadcrumbs(path));
-        model.addAttribute("objects", fileStorageService.list(userPrincipal.getId(), path));
+        model.addAttribute(BREADCRUMBS_ATTRIBUTE, BreadcrumbsUtil.buildBreadcrumbs(path));
+        model.addAttribute(OBJECTS_ATTRIBUTE, fileStorageService.list(userPrincipal.getId(), path));
         return HOME_VIEW;
     }
 }
