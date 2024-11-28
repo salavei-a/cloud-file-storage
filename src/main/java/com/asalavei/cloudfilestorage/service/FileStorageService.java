@@ -243,6 +243,7 @@ public class FileStorageService {
             minioRepository.delete(bucketName, fullPath);
         } catch (ObjectNotFoundException e) {
             log.warn("No objects found to delete for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
+            throw new FileStorageException(String.format("Unable to delete '%s' because it does not exist", getObjectName(path)));
         } catch (MinioOperationException e) {
             log.error("Error while deleting object '{}' for user '{}' from bucket '{}'", fullPath, userId, bucketName, e);
             throw new FileStorageException("Unable to delete: " + getObjectName(path));
