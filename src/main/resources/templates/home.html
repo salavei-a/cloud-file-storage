@@ -16,14 +16,14 @@
         <form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data" class="me-3">
             <input type="hidden" name="path" th:value="${#strings.isEmpty(param.path) ? '/' : param.path}" />
             <label style="cursor: pointer;">
-                <input type="file" name="files" multiple required style="display: none;" onchange="this.form.submit();" />
+                <input type="file" name="files" multiple required style="display: none;" />
                 <i class="bi bi-file-earmark-arrow-up icon" style="font-size: 2rem;" title="Upload Files"></i>
             </label>
         </form>
         <form th:action="@{/storage/upload}" method="post" enctype="multipart/form-data" class="me-3">
             <input type="hidden" name="path" th:value="${#strings.isEmpty(param.path) ? '/' : param.path}" />
             <label style="cursor: pointer;">
-                <input type="file" name="files" webkitdirectory multiple required style="display: none;" onchange="this.form.submit();" />
+                <input type="file" name="files" webkitdirectory multiple required style="display: none;" />
                 <i class="bi bi-folder-symlink icon" style="font-size: 2rem;" title="Upload Folder"></i>
             </label>
         </form>
@@ -135,6 +135,15 @@
     let currentPath = '';
     let currentName = '';
 
+    function configureToastr() {
+        toastr.options = {
+            "closeButton": true,
+            "positionClass": "toast-bottom-right",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000"
+        };
+    }
+
     function openRenameModal(button) {
         currentPath = button.getAttribute('data-path');
         currentName = button.getAttribute('data-name');
@@ -203,17 +212,38 @@
         }
         document.getElementById('newFolderForm').submit();
     }
+
+    function validateFileSize(input) {
+        const maxSize = 5 * 1024 * 1024;
+        const files = input.files;
+
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].size > maxSize) {
+                configureToastr();
+                toastr.info("The uploaded file is too large. Maximum allowed size is 5MB");
+                input.value = '';
+                return false;
+            }
+        }
+        return true;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function(event) {
+                if (validateFileSize(this)) {
+                    this.form.submit();
+                }
+            });
+        });
+    });
 </script>
 
 <script th:if="${message != null}">
     const message = '[[${message}]]';
     if (message.trim() !== '') {
-        toastr.options = {
-            "closeButton": true,
-            "positionClass": "toast-bottom-right",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000"
-        };
+        configureToastr();
         toastr.info(message);
     }
 </script>
