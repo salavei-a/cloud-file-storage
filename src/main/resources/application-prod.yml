@@ -18,6 +18,11 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
 
+server:
+  tomcat:
+    max-swallow-size: -1
+    max-http-form-post-size: 5MB
+
 minio:
   access:
     name: ${MINIO_ROOT_USER}
@@ -25,7 +30,3 @@ minio:
   bucket:
     name: ${MINIO_BUCKET}
   url: http://${MINIO_HOST}:${MINIO_PORT}
-
-server:
-  tomcat:
-    max-swallow-size: -1
