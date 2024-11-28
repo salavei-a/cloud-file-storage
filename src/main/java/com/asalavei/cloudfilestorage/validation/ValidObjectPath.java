@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Constraint(validatedBy = ObjectPathValidator.class)
 public @interface ValidObjectPath {
-    String message() default "Invalid path format. Please ensure it follows the correct structure";
+    String message() default "Could not execute action";
 
     Class<?>[] groups() default {};
 
