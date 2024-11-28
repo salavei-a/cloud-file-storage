@@ -59,6 +59,7 @@ public class FileStorageService {
 
     public void createFolder(Long userId, String folderName, String path) {
         String folderFullPath = getFullPath(userId, path + folderName + "/");
+
         try {
             if (isObjectExists(bucketName, folderFullPath)) {
                 throw new ObjectExistsException("There is already a file or folder with folder name you created");
@@ -74,10 +75,11 @@ public class FileStorageService {
 
     public InputStream downloadFile(Long userId, String path) {
         String fullPath = getFullPath(userId, path);
+
         try {
             return minioRepository.get(bucketName, fullPath);
         } catch (ObjectNotFoundException e) {
-            log.warn("File not found '{}' for user '{}', bucket '{}'", fullPath, userId, bucketName, e);
+            log.warn("File not found to download '{}' for user '{}', bucket '{}'", fullPath, userId, bucketName, e);
             throw new FileStorageException(
                     String.format("Unable to download file '%s' because it does not exist", getFileName(path))
             );
@@ -110,7 +112,7 @@ public class FileStorageService {
             zipOutputStream.finish();
             return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
         } catch (ObjectNotFoundException e) {
-            log.warn("Folder not found for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
+            log.warn("Folder not found to download for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
             throw new FileStorageException(
                     String.format("Unable to download folder '%s' because it does not exist", getFolderName(path))
             );
@@ -126,8 +128,13 @@ public class FileStorageService {
         String fullPath = getFullPath(userId, path);
 
         try {
+            if (!isFolder(path)) {
+                log.warn("Path is not a folder for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath);
+                throw new ObjectNotFoundException("Provided path is not a folder");
+            }
+
             if (!"/".equals(path) && !minioRepository.isFolderExists(bucketName, fullPath)) {
-                log.warn("Folder not found for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath);
+                log.warn("Folder not found to list for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath);
                 throw new ObjectNotFoundException("Folder does not exist");
             }
 
@@ -229,6 +236,7 @@ public class FileStorageService {
 
     public void delete(Long userId, String path) {
         String fullPath = getFullPath(userId, path);
+
         try {
             if (isFolder(path)) {
                 minioRepository.deleteAll(bucketName, fullPath);
