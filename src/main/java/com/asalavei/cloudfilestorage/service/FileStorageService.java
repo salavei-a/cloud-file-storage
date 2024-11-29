@@ -203,7 +203,7 @@ public class FileStorageService {
             }
 
             return userObjects.stream()
-                    .filter(object -> object.getName().toLowerCase().contains(query.toLowerCase()))
+                    .filter(object -> object.getName().toLowerCase().contains(query.trim().toLowerCase()))
                     .sorted(Comparator.comparing(object -> object.getName().toLowerCase()))
                     .toList();
         } catch (MinioOperationException e) {
