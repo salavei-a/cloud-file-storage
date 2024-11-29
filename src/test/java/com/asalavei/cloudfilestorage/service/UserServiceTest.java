@@ -1,7 +1,12 @@
 package com.asalavei.cloudfilestorage.service;
 
 import com.asalavei.cloudfilestorage.dto.SignUpRequestDto;
+import com.asalavei.cloudfilestorage.entity.User;
+import com.asalavei.cloudfilestorage.exception.UserAlreadyExistsException;
+import com.asalavei.cloudfilestorage.repository.UserRepository;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -15,6 +20,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static com.asalavei.cloudfilestorage.util.CredentialsUtil.normalizeUsername;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
@@ -23,6 +29,18 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(UserService.class)
 class UserServiceTest {
 
+    private static final String USERNAME = "Username";
+    private static final String PASSWORD = "Password";
+    private static final String NORMALIZED_USERNAME = "username";
+
+    private static SignUpRequestDto signUpRequestDto;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Autowired
     private UserService userService;
 
@@ -30,18 +48,69 @@ class UserServiceTest {
     @ServiceConnection
     public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:16");
 
-    @Test
-    void givenAvailableUsername_whenRegister_thenSaveUser() {
-        String username = "user";
-
-        SignUpRequestDto signUpRequestDto = SignUpRequestDto.builder()
-                .username(username)
-                .password("test")
+    @BeforeAll
+    static void setUp() {
+        signUpRequestDto = SignUpRequestDto.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .matchingPassword(PASSWORD)
                 .build();
+    }
 
+    @Test
+    void register_shouldSaveUser_whenUsernameIsAvailable() {
         userService.register(signUpRequestDto);
 
-        assertEquals(username, userService.getUser(username).get().getUsername());
+        User user = userRepository.findByUsername(NORMALIZED_USERNAME).get();
+        assertEquals(NORMALIZED_USERNAME, user.getUsername());
+    }
+
+    @Test
+    void register_shouldSaveUserWithNormalizedUsername_whenRequestUsernameIsUpperCase() {
+        // Arrange
+        String username = "UPPER_USERNAME";
+        SignUpRequestDto upperCaseUsernameSignUpRequest = SignUpRequestDto.builder()
+                .username(username)
+                .password(USERNAME)
+                .build();
+
+        // Act
+        userService.register(upperCaseUsernameSignUpRequest);
+
+        // Assert
+        String normalizedUsername = normalizeUsername(username);
+        User user = userRepository.findByUsername(normalizedUsername).get();
+        assertEquals(normalizedUsername, user.getUsername());
+    }
+
+    @Test
+    void register_shouldThrowUserAlreadyExistsException_whenUsernameAlreadyExists() {
+        userService.register(signUpRequestDto);
+
+        Executable act = () -> userService.register(signUpRequestDto);
+
+        assertThrows(UserAlreadyExistsException.class, act);
+    }
+
+    @Test
+    void register_shouldHashPassword_whenUserRegisters() {
+        userService.register(signUpRequestDto);
+
+        User user = userRepository.findByUsername(NORMALIZED_USERNAME).get();
+        assertNotEquals(PASSWORD, user.getPassword());
+        assertTrue(passwordEncoder.matches(PASSWORD, user.getPassword()));
+    }
+
+    @Test
+    void getUser_shouldReturnUser_whenUsernameExists() {
+        userService.register(signUpRequestDto);
+
+        assertEquals(NORMALIZED_USERNAME, userService.getUser(USERNAME).get().getUsername());
+    }
+
+    @Test
+    void getUser_shouldReturnEmptyOptional_whenUserDoesNotExist() {
+        assertTrue(userService.getUser(USERNAME).isEmpty());
     }
 
     @TestConfiguration
