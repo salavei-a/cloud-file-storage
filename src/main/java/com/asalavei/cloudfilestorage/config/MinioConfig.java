@@ -1,5 +1,6 @@
 package com.asalavei.cloudfilestorage.config;
 
+import com.asalavei.cloudfilestorage.exception.AppRuntimeException;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
@@ -37,11 +38,12 @@ public class MinioConfig {
     private void initBucket(MinioClient minioClient) {
         try {
             boolean bucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+
             if (!bucketExists) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
         } catch (Exception e) {
-            throw new RuntimeException("Could not initialize bucket: " + bucketName, e); // TODO: custom exception
+            throw new AppRuntimeException("Could not initialize bucket: " + bucketName, e);
         }
     }
 }
