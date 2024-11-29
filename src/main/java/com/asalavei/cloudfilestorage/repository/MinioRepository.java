@@ -10,6 +10,7 @@ import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
 import io.minio.StatObjectArgs;
@@ -108,7 +109,32 @@ public class MinioRepository {
         }
     }
 
-    public void copy(String bucketName, String destinationPrefix, String sourcePrefix) {
+    public void copy(String bucketName, String destinationPath, String sourcePath) {
+        try {
+            if (!isObjectExists(bucketName, sourcePath)) {
+                throw new ObjectNotFoundException("No object found to copy");
+            }
+
+            CopySource source = CopySource.builder()
+                    .bucket(bucketName)
+                    .object(sourcePath)
+                    .build();
+
+            minioClient.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(destinationPath)
+                            .source(source)
+                            .build()
+            );
+        } catch (ObjectNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new MinioOperationException("Failed to copy object", e);
+        }
+    }
+
+    public void copyAll(String bucketName, String destinationPrefix, String sourcePrefix) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, sourcePrefix, true);
 
@@ -121,17 +147,7 @@ public class MinioRepository {
                 String relativePath = sourceObjectName.substring(sourcePrefix.length());
                 String destinationObjectName = destinationPrefix + relativePath;
 
-                CopySource source = CopySource.builder()
-                        .bucket(bucketName)
-                        .object(sourceObjectName)
-                        .build();
-
-                minioClient.copyObject(
-                        CopyObjectArgs.builder()
-                                .bucket(bucketName)
-                                .object(destinationObjectName)
-                                .source(source)
-                                .build());
+                copy(bucketName, destinationObjectName, sourceObjectName);
             }
         } catch (ObjectNotFoundException e) {
             throw e;
@@ -140,7 +156,26 @@ public class MinioRepository {
         }
     }
 
-    public void delete(String bucketName, String prefix) {
+    public void delete(String bucketName, String path) {
+        try {
+            if (!isObjectExists(bucketName, path)) {
+                throw new ObjectNotFoundException("No object found to delete");
+            }
+
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(path)
+                            .build()
+            );
+        } catch (ObjectNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new MinioOperationException("Failed to delete object", e);
+        }
+    }
+
+    public void deleteAll(String bucketName, String prefix) {
         try {
             Iterable<Result<Item>> results = listObjects(bucketName, prefix, true);
             List<DeleteObject> objectsToDelete = new ArrayList<>();

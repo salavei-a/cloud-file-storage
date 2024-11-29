@@ -226,9 +226,14 @@ public class FileStorageService {
                 throw new ObjectExistsException("There is already a file or folder with name you specified. Specify a different name");
             }
 
-            minioRepository.copy(bucketName, destinationPath, sourcePath);
-            minioRepository.delete(bucketName, sourcePath);
-        } catch (ObjectNotFoundException e) {
+            if (isFolder(path)) {
+                minioRepository.copyAll(bucketName, destinationPath, sourcePath);
+            } else {
+                minioRepository.copy(bucketName, destinationPath, sourcePath);
+            }
+
+            delete(userId, path);
+        } catch (ObjectNotFoundException | FileStorageException e) {
             log.warn("No object found to rename for user '{}', bucket '{}', from '{}' to '{}'", userId, bucketName, sourcePath, destinationPath, e);
             throw new FileStorageException(String.format("Unable to rename '%s' because it does not exist", getObjectName(path)));
         } catch (MinioOperationException e) {
@@ -242,7 +247,11 @@ public class FileStorageService {
         String fullPath = getFullPath(userId, path);
 
         try {
-            minioRepository.delete(bucketName, fullPath);
+            if (isFolder(path)) {
+                minioRepository.deleteAll(bucketName, fullPath);
+            } else {
+                minioRepository.delete(bucketName, fullPath);
+            }
         } catch (ObjectNotFoundException e) {
             log.warn("No objects found to delete for user '{}', bucket '{}', path '{}'", userId, bucketName, fullPath, e);
             throw new FileStorageException(String.format("Unable to delete '%s' because it does not exist", getObjectName(path)));
