@@ -30,3 +30,6 @@ minio:
   bucket:
     name: ${MINIO_BUCKET}
   url: http://${MINIO_HOST}:${MINIO_PORT}
+
+storage:
+  user-root-format: "user-%s-files"

@@ -30,3 +30,6 @@ minio:
   bucket:
     name: user-files
   url: http://localhost:9000
+
+storage:
+  user-root-format: "user-%s-files"

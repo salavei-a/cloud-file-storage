@@ -17,9 +17,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -29,7 +26,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static com.asalavei.cloudfilestorage.util.PathUtil.DELIMITER;
+import static com.asalavei.cloudfilestorage.util.PathUtil.*;
 
 @Slf4j
 @Service
@@ -40,6 +37,9 @@ public class FileStorageService {
 
     @Value("${minio.bucket.name}")
     private String bucketName;
+
+    @Value("${storage.user-root-format}")
+    private String userRootFormat;
 
     public void upload(Long userId, MultipartFile file, String path) {
         String fileName = file.getOriginalFilename();
@@ -272,25 +272,12 @@ public class FileStorageService {
         }
     }
 
-    public String getFolderName(String path) {
-        return getFileName(path.substring(0, path.length() - 1));
+    private String getFullPath(Long userId, String path) {
+        return getUserRoot(userId) + path;
     }
 
-    public String getFileName(String path) {
-        return path.substring(path.lastIndexOf(DELIMITER) + 1);
-    }
-
-    public String generateZipFilename(String path) {
-        String timestamp = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
-        return getFolderName(path) + "-" + timestamp + ".zip";
-    }
-
-    private String getObjectName(String path) {
-        if (isFolder(path)) {
-            return getFolderName(path);
-        } else {
-            return getFileName(path);
-        }
+    private String getUserRoot(Long userId) {
+        return String.format(userRootFormat, userId);
     }
 
     private boolean isObjectExists(String bucketName, String path) {
@@ -311,54 +298,6 @@ public class FileStorageService {
         }
 
         return minioRepository.isObjectExists(bucketName, fullPath);
-    }
-
-    private String getRelativePath(String fullPath, String prefix) {
-        return fullPath.replace(prefix, "");
-    }
-
-    private String getUserRoot(Long userId) {
-        return String.format("user-%s-files", userId);
-    }
-
-    private String getFullPath(Long userId, String path) {
-        return getUserRoot(userId) + path;
-    }
-
-    private String getParentFolderPath(String path) {
-        return path.substring(0, path.lastIndexOf(DELIMITER) + 1);
-    }
-
-    private List<ObjectResponseDto> getParentFolders(String path) {
-        List<ObjectResponseDto> parentFolders = new ArrayList<>();
-        StringBuilder currentPath = new StringBuilder(DELIMITER);
-
-        for (String part : path.split(DELIMITER)) {
-            if (!part.isEmpty() && path.contains(part + DELIMITER)) {
-                currentPath.append(part).append(DELIMITER);
-                parentFolders.add(ObjectResponseDto.builder()
-                        .name(part)
-                        .path(currentPath.toString())
-                        .isFolder(true)
-                        .build());
-            }
-        }
-
-        return parentFolders;
-    }
-
-    private String buildNewPath(String path, String newName) {
-        String parentPath = getParentPath(path);
-        return isFolder(path) ? parentPath + newName + DELIMITER : parentPath + newName;
-    }
-
-    private String getParentPath(String path) {
-        String pathToExtractParent = isFolder(path) ? path.substring(0, path.length() - 1) : path;
-        return pathToExtractParent.substring(0, pathToExtractParent.lastIndexOf(DELIMITER) + 1);
-    }
-
-    private boolean isFolder(String path) {
-        return path.endsWith(DELIMITER);
     }
 
     private void sortObjects(List<ObjectResponseDto> userObjects) {
