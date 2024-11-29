@@ -37,7 +37,7 @@ public class FileStorageExceptionHandler {
 
     @ExceptionHandler(FileListingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleFileListingException(FileListingException e) {
+    public String handleFileListingException() {
         return ERROR_500_VIEW;
     }
 
