@@ -20,25 +20,25 @@ import static com.asalavei.cloudfilestorage.util.Constants.MESSAGE_ATTRIBUTE;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final String VALIDATION_FAILED_MESSAGE = "Validation failed for request: {} | Details: {}";
-
     @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleNoResourceFoundException() {
+    public String handleNoResourceFoundException(HttpServletRequest request) {
+        log.warn("Resource not found for request [{}]", request.getRequestURI());
         return ERROR_404_VIEW;
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String handleException(Exception e) {
-        log.error("Unexpected error occurred", e);
+    public String handleException(Exception e, HttpServletRequest request) {
+        log.error("Unexpected error occurred for request [{}]", request.getRequestURI(), e);
         return ERROR_500_VIEW;
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public String handleConstraintViolationException(ConstraintViolationException e, HttpServletRequest request,
                                                      RedirectAttributes redirectAttributes) {
-        log.info(VALIDATION_FAILED_MESSAGE, request.getRequestURI(), e.getConstraintViolations());
+        log.info("ConstraintViolationException: Validation failed for request [{}]. Violations: {}",
+                request.getRequestURI(), e.getConstraintViolations());
 
         String message = e.getConstraintViolations().iterator().next().getMessage();
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, message);
@@ -49,7 +49,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public String handleMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletRequest request,
                                                         RedirectAttributes redirectAttributes) {
-        log.info(VALIDATION_FAILED_MESSAGE, request.getRequestURI(), e.getBindingResult().getFieldErrors());
+        log.info("MethodArgumentNotValidException: Invalid arguments in request [{}]. Errors: {}",
+                request.getRequestURI(), e.getBindingResult().getFieldErrors());
 
         String message = e.getBindingResult().getFieldErrors().getFirst().getDefaultMessage();
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, message);
