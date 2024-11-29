@@ -1,4 +1,4 @@
-package com.asalavei.cloudfilestorage.entity;
+package com.asalavei.cloudfilestorage.auth.user;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,6 +1,5 @@
-package com.asalavei.cloudfilestorage.repository;
+package com.asalavei.cloudfilestorage.storage;
 
-import com.asalavei.cloudfilestorage.dto.MinioObjectDto;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import com.asalavei.cloudfilestorage.exception.ObjectNotFoundException;
 import com.asalavei.cloudfilestorage.util.PathUtil;

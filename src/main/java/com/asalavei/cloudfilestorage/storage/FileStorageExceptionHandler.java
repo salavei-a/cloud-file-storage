@@ -1,4 +1,4 @@
-package com.asalavei.cloudfilestorage.exception.handler;
+package com.asalavei.cloudfilestorage.storage;
 
 import com.asalavei.cloudfilestorage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.exception.FileStorageException;

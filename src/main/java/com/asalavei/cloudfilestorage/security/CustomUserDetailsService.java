@@ -1,7 +1,7 @@
 package com.asalavei.cloudfilestorage.security;
 
-import com.asalavei.cloudfilestorage.entity.User;
-import com.asalavei.cloudfilestorage.service.UserService;
+import com.asalavei.cloudfilestorage.auth.user.User;
+import com.asalavei.cloudfilestorage.auth.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

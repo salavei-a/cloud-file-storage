@@ -1,6 +1,6 @@
 package com.asalavei.cloudfilestorage.security;
 
-import com.asalavei.cloudfilestorage.entity.User;
+import com.asalavei.cloudfilestorage.auth.user.User;
 import lombok.Builder;
 import lombok.Value;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,8 +1,6 @@
-package com.asalavei.cloudfilestorage.controller;
+package com.asalavei.cloudfilestorage.auth;
 
-import com.asalavei.cloudfilestorage.dto.SignInRequestDto;
-import com.asalavei.cloudfilestorage.dto.SignUpRequestDto;
-import com.asalavei.cloudfilestorage.service.UserService;
+import com.asalavei.cloudfilestorage.auth.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;

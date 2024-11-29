@@ -1,9 +1,9 @@
-package com.asalavei.cloudfilestorage.controller;
+package com.asalavei.cloudfilestorage.system;
 
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
-import com.asalavei.cloudfilestorage.service.FileStorageService;
+import com.asalavei.cloudfilestorage.storage.FileStorageService;
 import com.asalavei.cloudfilestorage.util.BreadcrumbsUtil;
-import com.asalavei.cloudfilestorage.validation.ValidObjectPath;
+import com.asalavei.cloudfilestorage.validation.constraint.ValidObjectPath;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;

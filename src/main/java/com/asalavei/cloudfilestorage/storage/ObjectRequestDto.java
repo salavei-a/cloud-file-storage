@@ -1,7 +1,7 @@
-package com.asalavei.cloudfilestorage.dto;
+package com.asalavei.cloudfilestorage.storage;
 
-import com.asalavei.cloudfilestorage.validation.ValidObjectName;
-import com.asalavei.cloudfilestorage.validation.ValidObjectPath;
+import com.asalavei.cloudfilestorage.validation.constraint.ValidObjectName;
+import com.asalavei.cloudfilestorage.validation.constraint.ValidObjectPath;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Value;

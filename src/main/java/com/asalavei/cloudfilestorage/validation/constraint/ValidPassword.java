@@ -1,5 +1,6 @@
-package com.asalavei.cloudfilestorage.validation;
+package com.asalavei.cloudfilestorage.validation.constraint;
 
+import com.asalavei.cloudfilestorage.validation.PasswordConstraintValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -11,10 +12,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target(FIELD)
 @Retention(RUNTIME)
-@Constraint(validatedBy = UsernameValidator.class)
-public @interface ValidUsername {
+@Constraint(validatedBy = PasswordConstraintValidator.class)
+public @interface ValidPassword {
 
-    String message() default "Username can only contain letters, digits, dots (.), underscores (_), at signs (@), and hyphens (-).";
+    String message() default "Incorrect Password.";
 
     Class<?>[] groups() default {};
 

@@ -1,6 +1,5 @@
-package com.asalavei.cloudfilestorage.repository;
+package com.asalavei.cloudfilestorage.auth.user;
 
-import com.asalavei.cloudfilestorage.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

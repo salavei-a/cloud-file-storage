@@ -1,9 +1,7 @@
-package com.asalavei.cloudfilestorage.service;
+package com.asalavei.cloudfilestorage.auth.user;
 
-import com.asalavei.cloudfilestorage.dto.SignUpRequestDto;
-import com.asalavei.cloudfilestorage.entity.User;
+import com.asalavei.cloudfilestorage.auth.SignUpRequestDto;
 import com.asalavei.cloudfilestorage.exception.UserAlreadyExistsException;
-import com.asalavei.cloudfilestorage.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;

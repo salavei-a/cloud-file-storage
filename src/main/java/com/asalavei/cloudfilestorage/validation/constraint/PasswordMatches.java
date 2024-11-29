@@ -1,5 +1,6 @@
-package com.asalavei.cloudfilestorage.validation;
+package com.asalavei.cloudfilestorage.validation.constraint;
 
+import com.asalavei.cloudfilestorage.validation.PasswordMatchesValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

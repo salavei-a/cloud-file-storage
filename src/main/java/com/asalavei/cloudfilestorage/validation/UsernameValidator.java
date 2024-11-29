@@ -1,5 +1,6 @@
 package com.asalavei.cloudfilestorage.validation;
 
+import com.asalavei.cloudfilestorage.validation.constraint.ValidUsername;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

@@ -1,6 +1,7 @@
 package com.asalavei.cloudfilestorage.validation;
 
-import com.asalavei.cloudfilestorage.dto.SignUpRequestDto;
+import com.asalavei.cloudfilestorage.auth.SignUpRequestDto;
+import com.asalavei.cloudfilestorage.validation.constraint.PasswordMatches;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

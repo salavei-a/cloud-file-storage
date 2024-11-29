@@ -1,5 +1,6 @@
 package com.asalavei.cloudfilestorage.validation;
 
+import com.asalavei.cloudfilestorage.validation.constraint.ValidObjectPath;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

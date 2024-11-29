@@ -1,6 +1,6 @@
-package com.asalavei.cloudfilestorage.exception.handler;
+package com.asalavei.cloudfilestorage.auth.user;
 
-import com.asalavei.cloudfilestorage.dto.SignUpRequestDto;
+import com.asalavei.cloudfilestorage.auth.SignUpRequestDto;
 import com.asalavei.cloudfilestorage.exception.UserAlreadyExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;

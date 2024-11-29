@@ -1,4 +1,4 @@
-package com.asalavei.cloudfilestorage.dto;
+package com.asalavei.cloudfilestorage.storage;
 
 public record MinioObjectDto(String name) {
 }

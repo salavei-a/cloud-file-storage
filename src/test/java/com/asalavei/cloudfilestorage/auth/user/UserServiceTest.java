@@ -1,9 +1,7 @@
-package com.asalavei.cloudfilestorage.service;
+package com.asalavei.cloudfilestorage.auth.user;
 
-import com.asalavei.cloudfilestorage.dto.SignUpRequestDto;
-import com.asalavei.cloudfilestorage.entity.User;
+import com.asalavei.cloudfilestorage.auth.SignUpRequestDto;
 import com.asalavei.cloudfilestorage.exception.UserAlreadyExistsException;
-import com.asalavei.cloudfilestorage.repository.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;

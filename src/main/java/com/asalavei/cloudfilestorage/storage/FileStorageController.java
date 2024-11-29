@@ -1,10 +1,8 @@
-package com.asalavei.cloudfilestorage.controller;
+package com.asalavei.cloudfilestorage.storage;
 
-import com.asalavei.cloudfilestorage.dto.ObjectRequestDto;
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
-import com.asalavei.cloudfilestorage.service.FileStorageService;
 import com.asalavei.cloudfilestorage.util.HttpUtils;
-import com.asalavei.cloudfilestorage.validation.ValidObjectPath;
+import com.asalavei.cloudfilestorage.validation.constraint.ValidObjectPath;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

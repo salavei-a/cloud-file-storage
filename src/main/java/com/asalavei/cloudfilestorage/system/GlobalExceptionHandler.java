@@ -1,4 +1,4 @@
-package com.asalavei.cloudfilestorage.exception.handler;
+package com.asalavei.cloudfilestorage.system;
 
 import com.asalavei.cloudfilestorage.util.HttpUtils;
 import jakarta.servlet.http.HttpServletRequest;

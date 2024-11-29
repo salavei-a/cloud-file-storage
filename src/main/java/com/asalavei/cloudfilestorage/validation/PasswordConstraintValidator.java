@@ -1,5 +1,6 @@
 package com.asalavei.cloudfilestorage.validation;
 
+import com.asalavei.cloudfilestorage.validation.constraint.ValidPassword;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.passay.LengthRule;
