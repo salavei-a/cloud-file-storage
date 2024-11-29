@@ -31,7 +31,6 @@ public class FileStorageExceptionHandler {
     @ExceptionHandler(FileStorageException.class)
     public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes,
                                              HttpServletRequest request) {
-        log.warn("FileStorageException occurred: {}", e.getMessage());
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, e.getMessage());
         return HttpUtil.redirectToReferer(request);
     }
@@ -39,7 +38,6 @@ public class FileStorageExceptionHandler {
     @ExceptionHandler(FileListingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleFileListingException(FileListingException e) {
-        log.error("FileListingException occurred: {}", e.getMessage());
         return ERROR_500_VIEW;
     }
 
@@ -52,13 +50,13 @@ public class FileStorageExceptionHandler {
     @ExceptionHandler(ObjectExistsException.class)
     public String handleObjectExistsException(ObjectExistsException e, RedirectAttributes redirectAttributes,
                                               HttpServletRequest request) {
-        log.info("ObjectExistsException occurred: {}", e.getMessage());
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, e.getMessage());
         return HttpUtil.redirectToReferer(request);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public String handleMaxUploadSizeExceededException(RedirectAttributes redirectAttributes, HttpServletRequest request) {
+    public String handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, RedirectAttributes redirectAttributes, HttpServletRequest request) {
+        log.warn("MaxUploadSizeExceededException occurred: Uploaded file exceeds maximum size", e);
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, "The uploaded file is too large. Maximum allowed size is " + maxFileSize);
         return HttpUtil.redirectToReferer(request);
     }
