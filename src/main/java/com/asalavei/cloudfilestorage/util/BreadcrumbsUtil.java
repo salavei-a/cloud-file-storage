@@ -7,11 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.asalavei.cloudfilestorage.common.Constants.HOME_URL;
+import static com.asalavei.cloudfilestorage.util.PathUtil.DELIMITER;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BreadcrumbsUtil {
-
-    private static final String DELIMITER = "/";
 
     public static List<Breadcrumb> buildBreadcrumbs(String path) {
         List<Breadcrumb> breadcrumbs = new ArrayList<>();

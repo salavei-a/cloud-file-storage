@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static com.asalavei.cloudfilestorage.util.PathUtil.DELIMITER;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -58,7 +60,7 @@ public class FileStorageService {
     }
 
     public void createFolder(Long userId, String folderName, String path) {
-        String folderFullPath = getFullPath(userId, path + folderName + "/");
+        String folderFullPath = getFullPath(userId, path + folderName + DELIMITER);
 
         try {
             if (isObjectExists(bucketName, folderFullPath)) {
@@ -179,7 +181,7 @@ public class FileStorageService {
      */
     public List<ObjectResponseDto> search(Long userId, String query) {
         String userRoot = getUserRoot(userId);
-        String userRootPath = getFullPath(userId, "/");
+        String userRootPath = getFullPath(userId, DELIMITER);
 
         try {
             List<MinioObjectDto> minioObjects = minioRepository.list(bucketName, userRootPath, true);
@@ -255,7 +257,7 @@ public class FileStorageService {
     }
 
     public String getFileName(String path) {
-        return path.substring(path.lastIndexOf('/') + 1);
+        return path.substring(path.lastIndexOf(DELIMITER) + 1);
     }
 
     public String generateZipFilename(String path) {
@@ -280,11 +282,11 @@ public class FileStorageService {
             return minioRepository.isObjectExists(bucketName, path.substring(0, path.length() - 1));
         }
 
-        return minioRepository.isObjectExists(bucketName, path + "/");
+        return minioRepository.isObjectExists(bucketName, path + DELIMITER);
     }
 
     private boolean isFolderExists(String path, String fullPath) {
-        if ("/".equals(path)) {
+        if (DELIMITER.equals(path)) {
             return true;
         }
 
@@ -304,16 +306,16 @@ public class FileStorageService {
     }
 
     private String getParentFolderPath(String path) {
-        return path.substring(0, path.lastIndexOf("/") + 1);
+        return path.substring(0, path.lastIndexOf(DELIMITER) + 1);
     }
 
     private List<ObjectResponseDto> getParentFolders(String path) {
         List<ObjectResponseDto> parentFolders = new ArrayList<>();
-        StringBuilder currentPath = new StringBuilder("/");
+        StringBuilder currentPath = new StringBuilder(DELIMITER);
 
-        for (String part : path.split("/")) {
-            if (!part.isEmpty() && path.contains(part + "/")) {
-                currentPath.append(part).append("/");
+        for (String part : path.split(DELIMITER)) {
+            if (!part.isEmpty() && path.contains(part + DELIMITER)) {
+                currentPath.append(part).append(DELIMITER);
                 parentFolders.add(ObjectResponseDto.builder()
                         .name(part)
                         .path(currentPath.toString())
@@ -327,16 +329,16 @@ public class FileStorageService {
 
     private String buildNewPath(String path, String newName) {
         String parentPath = getParentPath(path);
-        return isFolder(path) ? parentPath + newName + "/" : parentPath + newName;
+        return isFolder(path) ? parentPath + newName + DELIMITER : parentPath + newName;
     }
 
     private String getParentPath(String path) {
         String pathToExtractParent = isFolder(path) ? path.substring(0, path.length() - 1) : path;
-        return pathToExtractParent.substring(0, pathToExtractParent.lastIndexOf('/') + 1);
+        return pathToExtractParent.substring(0, pathToExtractParent.lastIndexOf(DELIMITER) + 1);
     }
 
     private boolean isFolder(String path) {
-        return path.endsWith("/");
+        return path.endsWith(DELIMITER);
     }
 
     private void sortObjects(List<ObjectResponseDto> userObjects) {

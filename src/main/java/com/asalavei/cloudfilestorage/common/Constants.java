@@ -6,6 +6,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Constants {
 
+    public static final String PATH_PARAM = "path";
+    public static final String FILES_PARAM = "files";
+    public static final String QUERY_PARAM = "query";
+
     public static final String USER_ATTRIBUTE = "user";
     public static final String OBJECTS_ATTRIBUTE = "objects";
     public static final String BREADCRUMBS_ATTRIBUTE = "breadcrumbs";

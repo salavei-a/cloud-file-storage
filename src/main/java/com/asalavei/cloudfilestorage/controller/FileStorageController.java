@@ -29,9 +29,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static com.asalavei.cloudfilestorage.common.Constants.MESSAGE_ATTRIBUTE;
-import static com.asalavei.cloudfilestorage.common.Constants.OBJECTS_ATTRIBUTE;
-import static com.asalavei.cloudfilestorage.common.Constants.SEARCH_VIEW;
+import static com.asalavei.cloudfilestorage.common.Constants.*;
+import static com.asalavei.cloudfilestorage.util.PathUtil.DELIMITER;
 
 @Controller
 @RequiredArgsConstructor
@@ -42,7 +41,7 @@ public class FileStorageController {
     private final FileStorageService fileStorageService;
 
     @GetMapping("/download")
-    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam("path") @ValidObjectPath String path,
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam(PATH_PARAM) @ValidObjectPath String path,
                                                             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         InputStream inputStream = fileStorageService.downloadFile(userPrincipal.getId(), path);
         String fileName = UriUtils.encode(fileStorageService.getFileName(path), StandardCharsets.UTF_8);
@@ -55,7 +54,7 @@ public class FileStorageController {
     }
 
     @GetMapping("/download-multiple")
-    public ResponseEntity<InputStreamResource> downloadFolder(@RequestParam("path") @ValidObjectPath String path,
+    public ResponseEntity<InputStreamResource> downloadFolder(@RequestParam(PATH_PARAM) @ValidObjectPath String path,
                                                               @AuthenticationPrincipal UserPrincipal userPrincipal) {
         InputStream inputStream = fileStorageService.downloadFolderAsZip(userPrincipal.getId(), path);
         String fileName = UriUtils.encode(fileStorageService.generateZipFilename(path), StandardCharsets.UTF_8);
@@ -67,14 +66,14 @@ public class FileStorageController {
     }
 
     @GetMapping("/search")
-    public String search(@RequestParam("query") String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
+    public String search(@RequestParam(QUERY_PARAM) String query, @AuthenticationPrincipal UserPrincipal userPrincipal, Model model) {
         model.addAttribute(OBJECTS_ATTRIBUTE, fileStorageService.search(userPrincipal.getId(), query));
         return SEARCH_VIEW;
     }
 
     @PostMapping("/upload")
-    public String upload(@RequestParam(value = "path", defaultValue = "/") @ValidObjectPath String path,
-                         @RequestParam("files") List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal,
+    public String upload(@RequestParam(value = PATH_PARAM, defaultValue = DELIMITER) @ValidObjectPath String path,
+                         @RequestParam(FILES_PARAM) List<MultipartFile> files, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          RedirectAttributes redirectAttributes, HttpServletRequest request) {
         files.forEach(file -> fileStorageService.upload(userPrincipal.getId(), file, path));
 
@@ -101,7 +100,7 @@ public class FileStorageController {
     }
 
     @DeleteMapping
-    public String delete(@RequestParam("path") @ValidObjectPath String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
+    public String delete(@RequestParam(PATH_PARAM) @ValidObjectPath String path, @AuthenticationPrincipal UserPrincipal userPrincipal,
                          RedirectAttributes redirectAttributes, HttpServletRequest request) {
         fileStorageService.delete(userPrincipal.getId(), path);
 

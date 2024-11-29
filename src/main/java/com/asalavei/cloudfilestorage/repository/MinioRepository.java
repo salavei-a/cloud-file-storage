@@ -3,6 +3,7 @@ package com.asalavei.cloudfilestorage.repository;
 import com.asalavei.cloudfilestorage.dto.MinioObjectDto;
 import com.asalavei.cloudfilestorage.exception.MinioOperationException;
 import com.asalavei.cloudfilestorage.exception.ObjectNotFoundException;
+import com.asalavei.cloudfilestorage.util.PathUtil;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
 import io.minio.GetObjectArgs;
@@ -180,7 +181,7 @@ public class MinioRepository {
 
     public boolean isObjectExists(String bucketName, String path) {
         try {
-            if (path.endsWith("/")) {
+            if (path.endsWith(PathUtil.DELIMITER)) {
                 Iterable<Result<Item>> results = minioClient.listObjects(
                         ListObjectsArgs.builder()
                                 .bucket(bucketName)
