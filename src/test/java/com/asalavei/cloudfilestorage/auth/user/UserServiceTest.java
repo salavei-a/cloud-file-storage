@@ -17,7 +17,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static com.asalavei.cloudfilestorage.auth.user.CredentialsUtil.normalizeUsername;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
@@ -75,7 +74,7 @@ class UserServiceTest {
         userService.register(upperCaseUsernameSignUpRequest);
 
         // Assert
-        String normalizedUsername = normalizeUsername(username);
+        String normalizedUsername = "upper_username";
         User user = userRepository.findByUsername(normalizedUsername).get();
         assertEquals(normalizedUsername, user.getUsername());
     }

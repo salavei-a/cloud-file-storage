@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.asalavei.cloudfilestorage.auth.user.CredentialsUtil.normalizeUsername;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -35,5 +33,9 @@ public class UserService {
 
     public Optional<User> getUser(String username) {
         return userRepository.findByUsername(normalizeUsername(username));
+    }
+
+    private String normalizeUsername(String username) {
+        return username.trim().toLowerCase();
     }
 }
