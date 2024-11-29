@@ -31,4 +31,6 @@ public class Constants {
     public static final String SEARCH_VIEW = "search";
     public static final String ERROR_404_VIEW = "error/404";
     public static final String ERROR_500_VIEW = "error/500";
+
+    public static final String SESSION_COOKIE_NAME = "JSESSIONID";
 }

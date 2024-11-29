@@ -13,10 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static com.asalavei.cloudfilestorage.common.Constants.HOME_URL;
-import static com.asalavei.cloudfilestorage.common.Constants.PROCESS_SIGNIN_URL;
-import static com.asalavei.cloudfilestorage.common.Constants.SIGNIN_URL;
-import static com.asalavei.cloudfilestorage.common.Constants.SIGNOUT_URL;
+import static com.asalavei.cloudfilestorage.common.Constants.*;
 
 @RequiredArgsConstructor
 @Configuration
@@ -43,7 +40,7 @@ public class SecurityConfig {
                         .defaultSuccessUrl(HOME_URL, false))
                 .logout(logout -> logout
                         .logoutUrl(SIGNOUT_URL)
-                        .deleteCookies("JSESSIONID")
+                        .deleteCookies(SESSION_COOKIE_NAME)
                         .logoutSuccessUrl(SIGNIN_URL));
         return http.build();
     }
