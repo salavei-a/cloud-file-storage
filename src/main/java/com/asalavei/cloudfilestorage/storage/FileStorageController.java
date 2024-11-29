@@ -1,7 +1,7 @@
 package com.asalavei.cloudfilestorage.storage;
 
 import com.asalavei.cloudfilestorage.security.UserPrincipal;
-import com.asalavei.cloudfilestorage.util.HttpUtils;
+import com.asalavei.cloudfilestorage.util.HttpUtil;
 import com.asalavei.cloudfilestorage.validation.constraint.ValidObjectPath;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -27,7 +27,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static com.asalavei.cloudfilestorage.common.Constants.*;
+import static com.asalavei.cloudfilestorage.util.Constants.*;
 import static com.asalavei.cloudfilestorage.util.PathUtil.DELIMITER;
 
 @Controller
@@ -76,7 +76,7 @@ public class FileStorageController {
         files.forEach(file -> fileStorageService.upload(userPrincipal.getId(), file, path));
 
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, "Upload complete");
-        return HttpUtils.redirectToReferer(request);
+        return HttpUtil.redirectToReferer(request);
     }
 
     @PostMapping("/folders")
@@ -85,7 +85,7 @@ public class FileStorageController {
         fileStorageService.createFolder(userPrincipal.getId(), objectRequestDto.getName(), objectRequestDto.getPath());
 
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, "Folder created successfully");
-        return HttpUtils.redirectToReferer(request);
+        return HttpUtil.redirectToReferer(request);
     }
 
     @PatchMapping
@@ -94,7 +94,7 @@ public class FileStorageController {
         fileStorageService.rename(userPrincipal.getId(), objectRequestDto.getName(), objectRequestDto.getPath());
 
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, "Renamed successfully");
-        return HttpUtils.redirectToReferer(request);
+        return HttpUtil.redirectToReferer(request);
     }
 
     @DeleteMapping
@@ -103,6 +103,6 @@ public class FileStorageController {
         fileStorageService.delete(userPrincipal.getId(), path);
 
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, "Deleted successfully");
-        return HttpUtils.redirectToReferer(request);
+        return HttpUtil.redirectToReferer(request);
     }
 }

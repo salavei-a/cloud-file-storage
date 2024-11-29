@@ -12,8 +12,8 @@ import org.springframework.web.servlet.support.SessionFlashMapManager;
 
 import java.io.IOException;
 
-import static com.asalavei.cloudfilestorage.common.Constants.ERROR_MESSAGE_ATTRIBUTE;
-import static com.asalavei.cloudfilestorage.common.Constants.SIGNIN_URL;
+import static com.asalavei.cloudfilestorage.util.Constants.ERROR_MESSAGE_ATTRIBUTE;
+import static com.asalavei.cloudfilestorage.util.Constants.SIGNIN_URL;
 
 @Slf4j
 @Component

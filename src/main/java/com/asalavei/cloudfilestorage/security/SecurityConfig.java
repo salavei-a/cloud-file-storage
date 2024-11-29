@@ -1,6 +1,5 @@
-package com.asalavei.cloudfilestorage.config;
+package com.asalavei.cloudfilestorage.security;
 
-import com.asalavei.cloudfilestorage.security.CustomAuthenticationFailureHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static com.asalavei.cloudfilestorage.common.Constants.*;
+import static com.asalavei.cloudfilestorage.util.Constants.*;
 
 @RequiredArgsConstructor
 @Configuration

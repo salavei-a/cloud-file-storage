@@ -1,7 +1,6 @@
 package com.asalavei.cloudfilestorage.auth.user;
 
 import com.asalavei.cloudfilestorage.auth.SignUpRequestDto;
-import com.asalavei.cloudfilestorage.exception.UserAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.asalavei.cloudfilestorage.util.CredentialsUtil.normalizeUsername;
+import static com.asalavei.cloudfilestorage.auth.user.CredentialsUtil.normalizeUsername;
 
 @Slf4j
 @Service

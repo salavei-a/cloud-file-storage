@@ -1,10 +1,12 @@
 package com.asalavei.cloudfilestorage.storage;
 
-import com.asalavei.cloudfilestorage.exception.FileListingException;
-import com.asalavei.cloudfilestorage.exception.FileStorageException;
-import com.asalavei.cloudfilestorage.exception.MinioOperationException;
-import com.asalavei.cloudfilestorage.exception.ObjectNotFoundException;
-import com.asalavei.cloudfilestorage.exception.ObjectExistsException;
+import com.asalavei.cloudfilestorage.storage.exception.FileListingException;
+import com.asalavei.cloudfilestorage.storage.exception.FileStorageException;
+import com.asalavei.cloudfilestorage.storage.minio.MinioOperationException;
+import com.asalavei.cloudfilestorage.storage.exception.ObjectNotFoundException;
+import com.asalavei.cloudfilestorage.storage.exception.ObjectExistsException;
+import com.asalavei.cloudfilestorage.storage.minio.MinioObjectDto;
+import com.asalavei.cloudfilestorage.storage.minio.MinioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

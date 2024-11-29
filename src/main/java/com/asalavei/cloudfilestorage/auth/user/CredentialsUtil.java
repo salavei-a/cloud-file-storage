@@ -1,4 +1,4 @@
-package com.asalavei.cloudfilestorage.util;
+package com.asalavei.cloudfilestorage.auth.user;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

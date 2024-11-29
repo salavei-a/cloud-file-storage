@@ -1,6 +1,6 @@
-package com.asalavei.cloudfilestorage.exception;
+package com.asalavei.cloudfilestorage.storage.minio;
 
-public class MinioOperationException extends AppRuntimeException {
+public class MinioOperationException extends RuntimeException {
 
     public MinioOperationException(String message) {
         super(message);

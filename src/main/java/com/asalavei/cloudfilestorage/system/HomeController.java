@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import static com.asalavei.cloudfilestorage.common.Constants.*;
+import static com.asalavei.cloudfilestorage.util.Constants.*;
 import static com.asalavei.cloudfilestorage.util.PathUtil.DELIMITER;
 
 @Controller

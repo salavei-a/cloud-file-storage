@@ -1,0 +1,8 @@
+package com.asalavei.cloudfilestorage.storage.exception;
+
+public class ObjectNotFoundException extends RuntimeException {
+
+    public ObjectNotFoundException(String message) {
+        super(message);
+    }
+}

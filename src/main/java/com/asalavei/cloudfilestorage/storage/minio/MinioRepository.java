@@ -1,7 +1,6 @@
-package com.asalavei.cloudfilestorage.storage;
+package com.asalavei.cloudfilestorage.storage.minio;
 
-import com.asalavei.cloudfilestorage.exception.MinioOperationException;
-import com.asalavei.cloudfilestorage.exception.ObjectNotFoundException;
+import com.asalavei.cloudfilestorage.storage.exception.ObjectNotFoundException;
 import com.asalavei.cloudfilestorage.util.PathUtil;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;

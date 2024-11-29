@@ -1,7 +1,6 @@
 package com.asalavei.cloudfilestorage.auth.user;
 
 import com.asalavei.cloudfilestorage.auth.SignUpRequestDto;
-import com.asalavei.cloudfilestorage.exception.UserAlreadyExistsException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -18,7 +17,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static com.asalavei.cloudfilestorage.util.CredentialsUtil.normalizeUsername;
+import static com.asalavei.cloudfilestorage.auth.user.CredentialsUtil.normalizeUsername;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers

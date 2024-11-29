@@ -1,6 +1,6 @@
 package com.asalavei.cloudfilestorage.system;
 
-import com.asalavei.cloudfilestorage.util.HttpUtils;
+import com.asalavei.cloudfilestorage.util.HttpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import static com.asalavei.cloudfilestorage.common.Constants.ERROR_404_VIEW;
-import static com.asalavei.cloudfilestorage.common.Constants.ERROR_500_VIEW;
-import static com.asalavei.cloudfilestorage.common.Constants.MESSAGE_ATTRIBUTE;
+import static com.asalavei.cloudfilestorage.util.Constants.ERROR_404_VIEW;
+import static com.asalavei.cloudfilestorage.util.Constants.ERROR_500_VIEW;
+import static com.asalavei.cloudfilestorage.util.Constants.MESSAGE_ATTRIBUTE;
 
 @Slf4j
 @ControllerAdvice
@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
         String message = e.getConstraintViolations().iterator().next().getMessage();
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, message);
 
-        return HttpUtils.redirectToReferer(request);
+        return HttpUtil.redirectToReferer(request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -54,6 +54,6 @@ public class GlobalExceptionHandler {
         String message = e.getBindingResult().getFieldErrors().getFirst().getDefaultMessage();
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, message);
 
-        return HttpUtils.redirectToReferer(request);
+        return HttpUtil.redirectToReferer(request);
     }
 }

@@ -1,4 +1,4 @@
-package com.asalavei.cloudfilestorage.config;
+package com.asalavei.cloudfilestorage.system;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

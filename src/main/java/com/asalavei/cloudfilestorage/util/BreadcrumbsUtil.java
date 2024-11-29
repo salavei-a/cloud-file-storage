@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.asalavei.cloudfilestorage.common.Constants.HOME_URL;
+import static com.asalavei.cloudfilestorage.util.Constants.HOME_URL;
 import static com.asalavei.cloudfilestorage.util.PathUtil.DELIMITER;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
