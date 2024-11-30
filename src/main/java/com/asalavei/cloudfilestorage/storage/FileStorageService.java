@@ -225,10 +225,6 @@ public class FileStorageService {
         String destinationPath = getFullPath(userId, buildNewPath(path, newName));
 
         try {
-            if (!isObjectExists(bucketName, sourcePath)) {
-                throw new ObjectNotFoundException("No objects found to rename");
-            }
-
             if (isObjectExists(bucketName, destinationPath)) {
                 throw new ObjectExistsException("There is already a file or folder with name you specified. Specify a different name");
             }
