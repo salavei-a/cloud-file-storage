@@ -42,11 +42,9 @@ public class FileStorageController {
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam(PATH_PARAM) @ValidObjectPath String path,
                                                             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         InputStream inputStream = fileStorageService.downloadFile(userPrincipal.getId(), path);
-        String fileName = UriUtils.encode(PathUtil.getFileName(path), StandardCharsets.UTF_8);
-        String contentDisposition = "attachment; filename*=UTF-8''" + fileName;
 
         return ResponseEntity.ok()
-                .header("Content-Disposition", contentDisposition)
+                .header("Content-Disposition", getContentDisposition(PathUtil.getFileName(path)))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(inputStream));
     }
@@ -55,10 +53,9 @@ public class FileStorageController {
     public ResponseEntity<InputStreamResource> downloadFolder(@RequestParam(PATH_PARAM) @ValidObjectPath String path,
                                                               @AuthenticationPrincipal UserPrincipal userPrincipal) {
         InputStream inputStream = fileStorageService.downloadFolderAsZip(userPrincipal.getId(), path);
-        String fileName = UriUtils.encode(PathUtil.generateZipFilename(path), StandardCharsets.UTF_8);
 
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
+                .header("Content-Disposition", getContentDisposition(PathUtil.generateZipFilename(path)))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(inputStream));
     }
@@ -104,5 +101,9 @@ public class FileStorageController {
 
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, "Deleted successfully");
         return HttpUtil.redirectToReferer(request);
+    }
+
+    private String getContentDisposition(String fileName) {
+        return "attachment; filename*=UTF-8''" + UriUtils.encode(fileName, StandardCharsets.UTF_8);
     }
 }
