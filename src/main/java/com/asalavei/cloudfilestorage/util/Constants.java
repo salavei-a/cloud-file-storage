@@ -33,4 +33,5 @@ public class Constants {
     public static final String ERROR_500_VIEW = "error/500";
 
     public static final String SESSION_COOKIE_NAME = "JSESSIONID";
+    public static final String ANONYMOUS_USER = "anonymousUser";
 }

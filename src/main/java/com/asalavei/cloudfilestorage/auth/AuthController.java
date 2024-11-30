@@ -60,6 +60,8 @@ public class AuthController {
 
     private boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser");
+        return authentication != null
+                && authentication.isAuthenticated()
+                && !authentication.getPrincipal().equals(ANONYMOUS_USER);
     }
 }
