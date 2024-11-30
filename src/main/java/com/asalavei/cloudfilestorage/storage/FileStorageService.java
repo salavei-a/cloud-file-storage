@@ -46,6 +46,7 @@ public class FileStorageService {
         String fullPath = getFullPath(userId, path + fileName);
 
         try {
+            // potential race condition, but we accept it
             if (isObjectExists(bucketName, fullPath)) {
                 throw new ObjectExistsException("There is already a file or folder with file name you uploaded");
             }
@@ -66,6 +67,7 @@ public class FileStorageService {
         String fullPath = getFullPath(userId, path + folderName + DELIMITER);
 
         try {
+            // potential race condition, but we accept it
             if (isObjectExists(bucketName, fullPath)) {
                 throw new ObjectExistsException("There is already a file or folder with folder name you created");
             }
@@ -142,6 +144,7 @@ public class FileStorageService {
                 throw new ObjectNotFoundException("Provided path is not a folder");
             }
 
+            // potential race condition, but we accept it
             if (!isFolderExists(path, fullPath)) {
                 log.warn("Failed to list objects for user '{}': folder does not exist bucket '{}', path '{}'", userId, bucketName, fullPath);
                 throw new ObjectNotFoundException("Folder does not exist");
@@ -225,10 +228,6 @@ public class FileStorageService {
         String destinationPath = getFullPath(userId, buildNewPath(path, newName));
 
         try {
-            if (isObjectExists(bucketName, destinationPath)) {
-                throw new ObjectExistsException("There is already a file or folder with name you specified. Specify a different name");
-            }
-
             if (isFolder(path)) {
                 minioRepository.copyAll(bucketName, destinationPath, sourcePath);
             } else {

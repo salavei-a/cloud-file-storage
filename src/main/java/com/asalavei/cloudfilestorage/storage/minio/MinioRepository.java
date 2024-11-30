@@ -26,6 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * Repository for interacting with MinIO object storage.
+ * <p>
+ * MinIO does not throw errors if objects do not exist for operations like deletion or retrieval.
+ * This can lead to potential race conditions when checking for object existence before operations.
+ */
 @Slf4j
 @Repository
 @RequiredArgsConstructor
@@ -109,10 +116,6 @@ public class MinioRepository {
 
     public void copy(String bucketName, String destinationPath, String sourcePath) {
         try {
-            if (!isObjectExists(bucketName, sourcePath)) {
-                throw new ObjectNotFoundException("No object found to copy");
-            }
-
             CopySource source = CopySource.builder()
                     .bucket(bucketName)
                     .object(sourcePath)
@@ -125,8 +128,13 @@ public class MinioRepository {
                             .source(source)
                             .build()
             );
-        } catch (ObjectNotFoundException e) {
-            throw e;
+        } catch (ErrorResponseException e) {
+            if ("NoSuchKey".equals(e.errorResponse().code())) {
+                throw new ObjectNotFoundException("No object found to copy");
+            }
+            throw new MinioOperationException(
+                    String.format("Failed to copy object '%s'. Error code: %s, Message: %s",
+                            sourcePath, e.errorResponse().code(), e.errorResponse().message()), e);
         } catch (Exception e) {
             throw new MinioOperationException("Failed to copy object", e);
         }
