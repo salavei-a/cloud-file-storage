@@ -28,13 +28,6 @@ public class FileStorageExceptionHandler {
     @Value("${spring.servlet.multipart.max-file-size}")
     private String maxFileSize;
 
-    @ExceptionHandler(FileStorageException.class)
-    public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes,
-                                             HttpServletRequest request) {
-        redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, e.getMessage());
-        return HttpUtil.redirectToReferer(request);
-    }
-
     @ExceptionHandler(FileListingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleFileListingException() {
@@ -45,6 +38,13 @@ public class FileStorageExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleNoObjectFoundException() {
         return ERROR_404_VIEW;
+    }
+
+    @ExceptionHandler(FileStorageException.class)
+    public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes,
+                                             HttpServletRequest request) {
+        redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, e.getMessage());
+        return HttpUtil.redirectToReferer(request);
     }
 
     @ExceptionHandler(ObjectExistsException.class)

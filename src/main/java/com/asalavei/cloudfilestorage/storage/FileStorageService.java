@@ -63,21 +63,21 @@ public class FileStorageService {
     }
 
     public void createFolder(Long userId, String folderName, String path) {
-        String folderFullPath = getFullPath(userId, path + folderName + DELIMITER);
+        String fullPath = getFullPath(userId, path + folderName + DELIMITER);
 
         try {
-            if (isObjectExists(bucketName, folderFullPath)) {
+            if (isObjectExists(bucketName, fullPath)) {
                 throw new ObjectExistsException("There is already a file or folder with folder name you created");
             }
 
-            minioRepository.save(bucketName, folderFullPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
+            minioRepository.save(bucketName, fullPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
         } catch (ObjectExistsException e) {
             log.info("File or folder already exists when creating folder '{}' for user '{}', bucket '{}', path '{}'",
-                    folderName, userId, bucketName, folderFullPath);
+                    folderName, userId, bucketName, fullPath);
             throw e;
         } catch (MinioOperationException e) {
             log.error("Error while creating folder '{}' for user '{}', bucket '{}', path '{}'",
-                    folderName, userId, bucketName, folderFullPath, e);
+                    folderName, userId, bucketName, fullPath, e);
             throw new FileStorageException("Unable to create folder: " + folderName);
         }
     }
