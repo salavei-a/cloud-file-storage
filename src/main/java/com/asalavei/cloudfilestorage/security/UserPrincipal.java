@@ -1,7 +1,6 @@
 package com.asalavei.cloudfilestorage.security;
 
 import com.asalavei.cloudfilestorage.auth.user.User;
-import lombok.Builder;
 import lombok.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,7 +8,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-@Builder
 @Value
 public class UserPrincipal implements UserDetails {
 
