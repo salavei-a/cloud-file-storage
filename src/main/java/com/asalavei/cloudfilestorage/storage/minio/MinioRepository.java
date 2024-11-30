@@ -38,6 +38,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MinioRepository {
 
+    private static final String NO_SUCH_KEY = "NoSuchKey";
+
     private final MinioClient minioClient;
 
     public void save(String bucketName, String path, InputStream inputStream, long size, String contentType) {
@@ -64,7 +66,7 @@ public class MinioRepository {
                             .build()
             );
         } catch (ErrorResponseException e) {
-            if ("NoSuchKey".equals(e.errorResponse().code())) {
+            if (NO_SUCH_KEY.equals(e.errorResponse().code())) {
                 throw new ObjectNotFoundException("No object found in MinIO");
             }
             throw new MinioOperationException(
@@ -129,7 +131,7 @@ public class MinioRepository {
                             .build()
             );
         } catch (ErrorResponseException e) {
-            if ("NoSuchKey".equals(e.errorResponse().code())) {
+            if (NO_SUCH_KEY.equals(e.errorResponse().code())) {
                 throw new ObjectNotFoundException("No object found to copy");
             }
             throw new MinioOperationException(
@@ -243,7 +245,7 @@ public class MinioRepository {
 
             return true;
         } catch (ErrorResponseException e) {
-            if ("NoSuchKey".equals(e.errorResponse().code())) {
+            if (NO_SUCH_KEY.equals(e.errorResponse().code())) {
                 return false;
             }
             throw new MinioOperationException(
