@@ -30,17 +30,10 @@ Cloud File Storage is a web application inspired by Google Drive that allows use
 
 ## Interface
 
-- **Sign Up Page**:
-  ![Sign Up Screenshot](img/screenshot_sign_up.png)
-
-- **Sign In Page**:
-  ![Sign In Screenshot](img/screenshot_sign_in.png)
-
-- **Home Page**:
-  ![Home Page Screenshot](img/screenshot_home.png)
-
-- **Search Page**:
-  ![Search Page Screenshot](img/screenshot_search.png)
+![Sign Up Screenshot](img/screenshot_sign_up.png)
+![Sign In Screenshot](img/screenshot_sign_in.png)
+![Home Page Screenshot](img/screenshot_home.png)
+![Search Page Screenshot](img/screenshot_search.png)
 
 ## Local project startup
 
