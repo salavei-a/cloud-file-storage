@@ -1,12 +1,11 @@
 package com.asalavei.cloudfilestorage.util;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 
 import static com.asalavei.cloudfilestorage.util.Constants.HOME_URL;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class HttpUtil {
 
     public static String redirectToReferer(HttpServletRequest request) {

@@ -1,7 +1,6 @@
 package com.asalavei.cloudfilestorage.util;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +8,7 @@ import java.util.List;
 import static com.asalavei.cloudfilestorage.util.Constants.HOME_URL;
 import static com.asalavei.cloudfilestorage.util.PathUtil.DELIMITER;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class BreadcrumbsUtil {
 
     public static List<Breadcrumb> buildBreadcrumbs(String path) {

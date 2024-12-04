@@ -1,8 +1,7 @@
 package com.asalavei.cloudfilestorage.util;
 
 import com.asalavei.cloudfilestorage.storage.ObjectResponseDto;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -10,7 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class PathUtil {
 
     public static final String DELIMITER = "/";
