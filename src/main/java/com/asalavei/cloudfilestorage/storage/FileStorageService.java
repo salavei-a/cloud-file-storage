@@ -4,7 +4,6 @@ import com.asalavei.cloudfilestorage.storage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.storage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.storage.minio.MinioOperationException;
 import com.asalavei.cloudfilestorage.storage.exception.ObjectNotFoundException;
-import com.asalavei.cloudfilestorage.storage.exception.ObjectExistsException;
 import com.asalavei.cloudfilestorage.storage.minio.MinioObjectDto;
 import com.asalavei.cloudfilestorage.storage.minio.MinioRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,14 +47,12 @@ public class FileStorageService {
         try {
             // potential race condition, but we accept it
             if (isObjectExists(bucketName, fullPath)) {
-                throw new ObjectExistsException("There is already a file or folder with file name you uploaded");
+                log.info("File or folder already exists when uploading file '{}' for user '{}', bucket '{}', path '{}'",
+                        file.getOriginalFilename(), userId, bucketName, fullPath);
+                throw new FileStorageException("There is already a file or folder with file name you uploaded");
             }
 
             minioRepository.save(bucketName, fullPath, file.getInputStream(), file.getSize(), file.getContentType());
-        } catch (ObjectExistsException e) {
-            log.info("File or folder already exists when uploading file '{}' for user '{}', bucket '{}', path '{}'",
-                    file.getOriginalFilename(), userId, bucketName, fullPath);
-            throw e;
         } catch (MinioOperationException | IOException e) {
             log.error("Error while uploading file '{}' for user '{}', bucket '{}', path '{}'",
                     file.getOriginalFilename(), userId, bucketName, fullPath, e);
@@ -69,14 +66,12 @@ public class FileStorageService {
         try {
             // potential race condition, but we accept it
             if (isObjectExists(bucketName, fullPath)) {
-                throw new ObjectExistsException("There is already a file or folder with folder name you created");
+                log.info("File or folder already exists when creating folder '{}' for user '{}', bucket '{}', path '{}'",
+                        folderName, userId, bucketName, fullPath);
+                throw new FileStorageException("There is already a file or folder with folder name you created");
             }
 
             minioRepository.save(bucketName, fullPath, new ByteArrayInputStream(new byte[0]), 0, "application/x-directory");
-        } catch (ObjectExistsException e) {
-            log.info("File or folder already exists when creating folder '{}' for user '{}', bucket '{}', path '{}'",
-                    folderName, userId, bucketName, fullPath);
-            throw e;
         } catch (MinioOperationException e) {
             log.error("Error while creating folder '{}' for user '{}', bucket '{}', path '{}'",
                     folderName, userId, bucketName, fullPath, e);
@@ -228,6 +223,13 @@ public class FileStorageService {
         String destinationPath = getFullPath(userId, buildNewPath(path, newName));
 
         try {
+            // potential race condition, but we accept it
+            if (isObjectExists(bucketName, destinationPath)) {
+                log.info("File or folder already exists when renaming from '{}' to '{}' for user '{}', bucket '{}'",
+                        sourcePath, destinationPath, userId, bucketName);
+                throw new FileStorageException("There is already a file or folder with name you specified. Specify a different name");
+            }
+
             if (isFolder(path)) {
                 minioRepository.copyAll(bucketName, destinationPath, sourcePath);
             } else {
@@ -235,11 +237,7 @@ public class FileStorageService {
             }
 
             delete(userId, path);
-        } catch (ObjectExistsException e) {
-            log.info("File or folder already exists when renaming from '{}' to '{}' for user '{}', bucket '{}'",
-                    sourcePath, destinationPath, userId, bucketName);
-            throw e;
-        } catch (ObjectNotFoundException | FileStorageException e) {
+        } catch (ObjectNotFoundException e) {
             log.warn("No object found to rename for user '{}', bucket '{}', from '{}' to '{}'", userId, bucketName, sourcePath, destinationPath, e);
             throw new FileStorageException(String.format("Unable to rename '%s' because it does not exist", getObjectName(path)));
         } catch (MinioOperationException e) {

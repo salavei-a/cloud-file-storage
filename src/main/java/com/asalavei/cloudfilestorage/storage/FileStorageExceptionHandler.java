@@ -3,7 +3,6 @@ package com.asalavei.cloudfilestorage.storage;
 import com.asalavei.cloudfilestorage.storage.exception.FileListingException;
 import com.asalavei.cloudfilestorage.storage.exception.FileStorageException;
 import com.asalavei.cloudfilestorage.storage.exception.ObjectNotFoundException;
-import com.asalavei.cloudfilestorage.storage.exception.ObjectExistsException;
 import com.asalavei.cloudfilestorage.util.HttpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -43,13 +42,6 @@ public class FileStorageExceptionHandler {
     @ExceptionHandler(FileStorageException.class)
     public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes,
                                              HttpServletRequest request) {
-        redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, e.getMessage());
-        return HttpUtil.redirectToReferer(request);
-    }
-
-    @ExceptionHandler(ObjectExistsException.class)
-    public String handleObjectExistsException(ObjectExistsException e, RedirectAttributes redirectAttributes,
-                                              HttpServletRequest request) {
         redirectAttributes.addFlashAttribute(MESSAGE_ATTRIBUTE, e.getMessage());
         return HttpUtil.redirectToReferer(request);
     }
