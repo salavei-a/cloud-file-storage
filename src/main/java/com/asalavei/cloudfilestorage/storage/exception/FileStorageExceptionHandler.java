@@ -1,8 +1,5 @@
-package com.asalavei.cloudfilestorage.storage;
+package com.asalavei.cloudfilestorage.storage.exception;
 
-import com.asalavei.cloudfilestorage.storage.exception.FileListingException;
-import com.asalavei.cloudfilestorage.storage.exception.FileStorageException;
-import com.asalavei.cloudfilestorage.storage.exception.ObjectNotFoundException;
 import com.asalavei.cloudfilestorage.util.HttpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

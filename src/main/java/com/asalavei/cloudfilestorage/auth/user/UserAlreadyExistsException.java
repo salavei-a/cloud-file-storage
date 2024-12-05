@@ -1,6 +1,8 @@
 package com.asalavei.cloudfilestorage.auth.user;
 
-public class UserAlreadyExistsException extends RuntimeException {
+import com.asalavei.cloudfilestorage.exception.AppRuntimeException;
+
+public class UserAlreadyExistsException extends AppRuntimeException {
 
     public UserAlreadyExistsException(String message) {
         super(message);

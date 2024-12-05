@@ -1,6 +1,8 @@
 package com.asalavei.cloudfilestorage.storage.exception;
 
-public class FileListingException extends RuntimeException {
+import com.asalavei.cloudfilestorage.exception.AppRuntimeException;
+
+public class FileListingException extends AppRuntimeException {
 
     public FileListingException(String message) {
         super(message);
